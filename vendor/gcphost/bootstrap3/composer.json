@@ -1,0 +1,25 @@
+{
+    "name": "gcphost/bootstrap3",
+    "description": "Bootstrap 3.1 for Laravel 4.1",
+    "keywords": ["laravel", "bootstrap3", "lpm"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "caouecs",
+            "email": "caouecs@caouecs.net"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "~4"
+    },
+    "autoload": {
+        "classmap": [
+            "src/migrations"
+        ],
+        "psr-0": {
+            "Caouecs\\Bootstrap3": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}

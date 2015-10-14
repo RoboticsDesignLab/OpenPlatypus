@@ -1,0 +1,7 @@
+/vendor
+composer.phar
+.DS_Store
+build
+tests/coverage
+tests/meta
+.idea

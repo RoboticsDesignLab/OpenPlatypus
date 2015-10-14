@@ -1,0 +1,16 @@
+{
+  "aliases": [
+    {
+      "alias": "Form",
+      "facade": "Caouecs\\Bootstrap3\\Form"
+    },
+    {
+      "alias": "Alert",
+      "facade": "Caouecs\\Bootstrap3\\Alert"
+    },
+    {
+      "alias": "Breadcrumb",
+      "facade": "Caouecs\\Bootstrap3\\Breadcrumb"
+    },
+  ]
+}

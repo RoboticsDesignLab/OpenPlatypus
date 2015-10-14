@@ -1,0 +1,9 @@
+.env.*.php
+.idea/*
+app/config/luke/*
+.env.php
+.DS_Store
+Thumbs.db
+.project
+.settings
+.buildpath
