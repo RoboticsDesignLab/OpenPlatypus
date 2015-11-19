@@ -1,9 +1,9 @@
-# Platypus 2
+# Open Platypus
 
 
 ## Requirements
 
-Platypus has a number of requirement to function as included below:
+Welcome to OpenPlatypus.  It has a number of requirement to function as included below:
 
 * PHP >= v5.5.9
     * OpenSSL PHP Extension
