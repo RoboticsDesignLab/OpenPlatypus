@@ -97,6 +97,29 @@ Reviews
 			</div>
 		
 		@endif
+
+
+		@if($assignment->isStudent(Auth::user()) && $assignment->usesGroupMarkMode())
+			<div class="dropdown inline">
+				<button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+					@if(!isset($queryData['viewgroup']) || $queryData['viewgroup'] == 0)
+						Only show suggested marking <span class="caret"></span>
+					@else
+						Show marking for whole group <span class="caret"></span>
+					@endif
+				</button>
+
+				<ul class="dropdown-menu">
+					<li><a href="{{{ Request::url().'?'.http_build_query(array_merge($queryData, array('viewgroup' => 0))) }}}">
+						Only show suggested marking
+					</a></li>
+					<li><a href="{{{ Request::url().'?'.http_build_query(array_merge($queryData, array('viewgroup' => 1))) }}}">
+						Show marking for whole group
+					</a></li>
+				</ul>
+			</div>
+		@endif
+
 	</div>
 @endif
 

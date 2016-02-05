@@ -69,6 +69,10 @@ class AssignmentMarksReleased extends PlatypusEnum {
 	const finalmarks = 4;
 }
 
+class AssignmentGroupMarkMode extends PlatypusEnum {
+	const group = 0;
+	const individual = 1;
+}
 
 
 class Assignment extends PlatypusBaseModel {
@@ -80,6 +84,7 @@ class Assignment extends PlatypusBaseModel {
 	public static $enumColumns = array (
 			'group_work_mode' => 'AssignmentGroupWorkMode',
 			'group_selection_mode' => 'AssignmentGroupSelectionMode',
+			'group_mark_mode' => 'AssignmentGroupMarkMode',
 			'guess_marks' => 'AssignmentGuessMarks',
 			'mark_by_tutors' => 'AssignmentMarkByTutors',
 			'shuffle_mode' => 'AssignmentShuffleMode',
@@ -99,6 +104,7 @@ class Assignment extends PlatypusBaseModel {
 				'answers_due',
 				'group_work_mode',
 				'group_selection_mode',
+				'group_mark_mode',
 				'group_size_min',
 				'group_size_max',
 			    'guess_marks',
@@ -116,6 +122,7 @@ class Assignment extends PlatypusBaseModel {
 	public static $defaultValues = array(
 			'visibility' => AssignmentVisibility::hidden,
 			'group_work_mode' => AssignmentGroupWorkMode::no,
+			'group_mark_mode' => AssignmentGroupMarkMode::group,
 			'mark_by_tutors' => AssignmentMarkByTutors::all,
 			'number_of_peers' => 3,
 			'shuffle_mode' => AssignmentShuffleMode::shufflequestions,
@@ -515,6 +522,12 @@ class Assignment extends PlatypusBaseModel {
 	public function usesGroups() {
 		return $this->group_work_mode != AssignmentGroupWorkMode::no;
 	}
+
+	public function usesGroupMarkMode() {
+		if (!$this->usesGroups()) return false;
+		if (!$this->group_mark_mode == AssignmentGroupMarkMode::group) return false;
+		return true;
+	}
 	
 	public function onlyOneAnswerPerGroup() {
 		return $this->group_work_mode == AssignmentGroupWorkMode::groupsolutions;
@@ -616,9 +629,7 @@ class Assignment extends PlatypusBaseModel {
 	public function maySetSolutionEditor(User $user) {
 		return $this->mayManageAssignment($user);
 	}
-	
-	
-	
+
 	public function mayEditMarkingSchemes(User $user) {
 		return $this->mayManageAssignment($user);
 	}
@@ -671,8 +682,7 @@ class Assignment extends PlatypusBaseModel {
 			return true;
 		}
 	}
-	
-	
+
 	public function mayMoveQuestions(User $user) {
 		return $this->mayEditQuestions($user);
 	}
@@ -834,9 +844,7 @@ class Assignment extends PlatypusBaseModel {
 		}
 		App::abort(500, 'This is a bug');
 	}
-	
-	
-	
+
 	public function maySeeReceivedReviews(User $user) {
 		if (!$this->isActiveStudent($user)) return false;
 		
@@ -1104,7 +1112,7 @@ class Assignment extends PlatypusBaseModel {
 	}
 	
 	// we need to do everything by hand here. It is complicated
-	public function getUserReviewDataOrderedQuery($user, $showCompleted, $reviewsOnly = false, $forceByQuestion = false, $onlyQuestion = null) {
+	public function getUserReviewDataOrderedQuery($user, $showCompleted, $reviewsOnly = false, $forceByQuestion = false, $onlyQuestion = null, $viewGroup = 0) {
 
 		if($reviewsOnly && !$this->maySetFinalMarks($user)) {
 			$reviewsOnly = true;
@@ -1125,7 +1133,7 @@ class Assignment extends PlatypusBaseModel {
 			App::abort(500); // we are using the user id in an sql string. Thus, make 100% sure it is a harmless number.
 		}
 		
-			if (!is_numeric($this->id)) {
+		if (!is_numeric($this->id)) {
 			App::abort(500); // we are using the id in an sql string. Thus, make 100% sure it is a harmless number.
 		}
 		
@@ -1134,7 +1142,7 @@ class Assignment extends PlatypusBaseModel {
 			// make a select for pairs of (master) question ids and user ids. The user is the user who wrote the answer. 
 			$result = DB::table('questions')
 				->select(DB::raw('coalesce(master_questions.id,questions.id) as the_question_id'), 'answers.user_id as answer_user_id')
-				->distinct()				
+				->distinct()
 				
 				->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')
 				->join('answers', 'questions.id','=','answers.question_id')
@@ -1310,8 +1318,105 @@ class Assignment extends PlatypusBaseModel {
 				
 		}
 
+		// Limit the query if suggesting the number of individual reviews from the group pool
+		if ($this->isStudent($user) && (($this->usesGroupMarkMode() && $viewGroup == 0) || !$this->usesGroupMarkMode())) {
+			$reviewQuery = DB::table('reviews')
+				->select('student_group_memberships.student_group_id')
+				->join('users', 'users.id', '=', 'reviews.user_id')
+				->join('answers', 'answers.id', '=', 'reviews.answer_id')
+				->join('questions', 'questions.id', '=', 'answers.question_id')
+				->join('subject_members', 'subject_members.user_id', '=', 'answers.user_id')
+				->join('student_group_memberships', 'student_group_memberships.subject_member_id', '=', 'subject_members.id')
+				->join('student_groups', 'student_groups.id', '=', 'student_group_memberships.student_group_id')
+				->where('reviews.user_id', $user->id)
+				->where('questions.assignment_id', $this->id)
+				->where('student_groups.assignment_id', $this->id);
+
+			$markedReviewQuery = $reviewQuery;
+			$markedCount = 0;
+			if ($this->shuffle_mode == AssignmentShuffleMode::wholeassignments) {
+				$reviewQuery = $reviewQuery
+					->distinct('student_group_memberships.student_group_id');
+				$markedReviewQuery = $markedReviewQuery
+					->select('student_group_memberships.student_group_id', DB::raw('min(reviews.status) as status_min'))
+					->groupby('student_group_memberships.student_group_id');
+				foreach($markedReviewQuery->get() as $r) {
+					if ($r->status_min == ReviewStatus::completed) {
+						$markedResults += 1;
+					}
+				}
+			} else {
+				$markedReviewQuery = $markedReviewQuery
+					->where('reviews.status', ReviewStatus::completed);
+				$markedCount = count($markedResults);
+			}
+
+			$totalReviewCount = $reviewQuery->count('student_group_memberships.student_group_id');
+
+			Log::debug('Here');
+
+			Log::debug($markedCount);
+
+			$studentGroup = DB::table('student_groups')
+				->select('student_groups.id')
+				->join('student_group_memberships', 'student_group_memberships.student_group_id', '=', 'student_groups.id')
+				->join('subject_members', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+				->where('student_groups.assignment_id', $this->id)
+				->where('subject_members.user_id', $user->id);
+
+			if ($studentGroup->count() < 1) {
+				return $result;
+			}
+
+			$studentGroup = $studentGroup->first();
+
+			$groupMembers = DB::table('student_group_memberships')
+				->join('subject_members', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+				->select('subject_members.user_id')
+				->where('student_group_memberships.student_group_id', $studentGroup->id);
+
+			$groupCount = $groupMembers->count();
+
+			$groupMembers = $groupMembers->get();
+			$groupPos = 0;
+			foreach($groupMembers as $member) {
+				if ($member->user_id == $user->id){
+					break;
+				}
+				$groupPos += 1;
+			}
+			//Log::debug('Here');
+			if ($groupCount <= 1) {
+				return $result;
+			}
+
+			$suggestedCount = ceil($totalReviewCount / $groupCount);
+
+			$toShow = 0;
+			if ($markedCount < $suggestedCount) {
+				$toShow = $suggestedCount - $markedCount;
+			}
+
+			if ($this->usesGroupMarkMode() && $showCompleted){
+				$toShow = $suggestedCount;
+			}
+//			Log::debug('Data');
+//			Log::debug($groupCount);
+//			Log::debug($groupPos);
+//			Log::debug($totalReviewCount);
+//			Log::debug($groupCount);
+//			Log::debug($suggestedCount);
+//			Log::debug($markedCount);
+//			Log::debug($toShow);
+//			Log::debug($showCompleted);
+//			Log::debug($this->usesGroupMarkMode());
+//			Log::debug($groupPos * $suggestedCount);
+
+			$result->skip($groupPos * $suggestedCount)->take($toShow);
+		}
+
 		return $result;
-	}	
+	}
 	
 	public function getUserReviewsCompletedQuery($user) {
 		return $this->getUserReviewsQuery($user)->where('status', ReviewStatus::completed);
@@ -1423,6 +1528,7 @@ class Assignment extends PlatypusBaseModel {
 			$table->tinyInteger('group_selection_mode')->default(AssignmentGroupSelectionMode::lecturer);
 			$table->integer('group_size_min')->unsigned()->default(2);
 			$table->integer('group_size_max')->unsigned()->default(4);
+			$table->tinyInteger('group_mark_mode')->default(AssignmentGroupMarkMode::group);
 			$table->tinyInteger('guess_marks')->default(AssignmentGuessMarks::no);
 			$table->tinyInteger('mark_by_tutors')->default(AssignmentMarkByTutors::all);
 			$table->timestamp('tutors_due')->nullable()->index();
@@ -1452,6 +1558,7 @@ Assignment::$rules = array (
 		'answers_due' => 'required|date|carbon',
 		// group_work_mode is enum
 		// group_selection_mode is enum
+		// group_mark_mode is enum
 		'group_size_min' => 'required_if:group_selection_mode,' . AssignmentGroupSelectionMode::selfservice . '|integer|between:1,100',
 		'group_size_max' => 'required_if:group_selection_mode,' . AssignmentGroupSelectionMode::selfservice . '|integer|between:2,100|equallarger:group_size_min',
 		// guess_marks is enum
@@ -1581,6 +1688,11 @@ class AssignmentPresenter extends PlatypusBasePresenter {
 	public static $explainGroupSelectionMode = array (
 			AssignmentGroupSelectionMode::lecturer => 'Groups are only assigned by the lecturer.',
 			AssignmentGroupSelectionMode::selfservice => 'Students can self-assign their groups.',
+	);
+
+	public static $explainGroupMarkMode = array(
+			AssignmentGroupMarkMode::group => 'Assignments are marked by the group. The group can see all assigned reviews, with each student allotted a suggested amount of reviews.',
+			AssignmentGroupMarkMode::individual => 'Reviews are assigned to the individual to be marked individually.',
 	);
 	
 	

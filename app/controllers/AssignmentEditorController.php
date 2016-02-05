@@ -63,6 +63,7 @@ class AssignmentEditorController extends BaseController {
 						'answers_due',
 						'group_work_mode',
 						'group_selection_mode',
+						'group_mark_mode',
 						'group_size_min',
 						'group_size_max',
 						'guess_marks',

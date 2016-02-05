@@ -131,21 +131,21 @@ class StudentGroup extends PlatypusBaseModel {
 			})->first();
 	}
 	
-        static function getUserGroupList(Assignment $assignment, $user_ids, $complete=false) {
-                if (!$complete) {
-                        return DB::table('subject_members')->whereIn('user_id', $user_ids)->where('subject_id', $assignment->subject->id)
-                                ->join('student_group_memberships', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
-                                ->lists('student_group_id', 'user_id');
-                } else {
-                        $groups = DB::table('subject_members')->whereIn('user_id', $user_ids)->where('subject_id', $assignment->subject->id)
-                                ->join('student_group_memberships', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
-                                ->lists('student_group_id');
-                        return DB::table('subject_members')->where('subject_id', $assignment->subject->id)
-                                ->join('student_group_memberships', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
-                                ->whereIn('student_group_id', $groups)
-                                ->lists('student_group_id', 'user_id');
-                }
-        }
+	static function getUserGroupList(Assignment $assignment, $user_ids, $complete=false) {
+			if (!$complete) {
+					return DB::table('subject_members')->whereIn('user_id', $user_ids)->where('subject_id', $assignment->subject->id)
+							->join('student_group_memberships', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+							->lists('student_group_id', 'user_id');
+			} else {
+					$groups = DB::table('subject_members')->whereIn('user_id', $user_ids)->where('subject_id', $assignment->subject->id)
+							->join('student_group_memberships', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+							->lists('student_group_id');
+					return DB::table('subject_members')->where('subject_id', $assignment->subject->id)
+							->join('student_group_memberships', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+							->whereIn('student_group_id', $groups)
+							->lists('student_group_id', 'user_id');
+			}
+	}
 	
 	static function makeGroup(Assignment $assignment, $users) {
 		if ($users instanceof User) {

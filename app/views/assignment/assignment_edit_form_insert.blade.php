@@ -65,18 +65,16 @@ if($assignment->markingHasStarted()) {
 {{ Form::radio_group_vertical('mark_by_tutors', 'mark_by_tutors', Assignment::explainMarkByTutors(), $assignment->mark_by_tutors, $errors, array(), null, true, $fieldOptions) }}
 	
 {{ Form::input_group('text', 'tutors_due', 'Tutor marks due date', $assignment->tutors_due, $errors, array('placeholder' => 'DD/MM/YYYY HH:MM:SS'), 
-	'The date (and time) the tutors have to have completed their marking by. This date is informative only and not enforced.') }}	
-
-
+	'The date (and time) the tutors have to have completed their marking by. This date is informative only and not enforced.') }}
 
 {{ Form::radio_group_vertical('marks_released', 'marks_released', Assignment::explainMarksReleased(), $assignment->marks_released, $errors) }}
-	
 
 
 {{ Form::radio_group_vertical('group_work_mode', 'group_work_mode', Assignment::explainGroupWorkMode(), $assignment->group_work_mode, $errors, $disabledIfMarking()) }}
 
-
 {{ Form::radio_group_vertical('group_selection_mode', 'group_selection_mode', Assignment::explainGroupSelectionMode(), $assignment->group_selection_mode, $errors, $disabledIfMarking()) }}
+
+{{ Form::radio_group_vertical('group_mark_mode', 'group_mark_mode', Assignment::explainGroupMarkMode(), $assignment->group_mark_mode, $errors, $disabledIfMarking()) }}
 
 {{ Form::input_group('text', 'group_size_min', 'Minimum group size', $assignment->group_size_min, $errors, $disabledIfMarking(),
 	'The minimum size a group is allowed to have. (Only enforced when students self-assign groups.)') }}

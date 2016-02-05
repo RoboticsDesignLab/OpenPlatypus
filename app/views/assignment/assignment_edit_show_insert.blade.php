@@ -46,6 +46,7 @@ The marking process will be started on {{{$assignment->autostart_marking_time}}}
 @else
 	<li>Each group has to have between {{{ $assignment->group_size_min }}} and {{{ $assignment->group_size_max }}} members.</li>	
 @endif
+	<li>{{{ $assignment->explainGroupMarkMode() }}}</li>
 @endif
 
 </ul>
