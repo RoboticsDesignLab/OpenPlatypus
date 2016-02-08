@@ -295,7 +295,7 @@ class TextBlock extends PlatypusBaseModel {
 				
 			$table->increments('id');
 			$table->tinyInteger('content_type')->default(TextBlockContentType::plain);
-			$table->longText('text');
+			$table->longText('text')->nullable();
 			$table->integer('restriction_id')->unsigned()->nullable();
 			$table->foreign('restriction_id')->references('id')->on('text_block_restrictions')->onDelete('restrict');
 		});
