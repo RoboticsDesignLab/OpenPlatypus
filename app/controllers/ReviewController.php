@@ -179,7 +179,7 @@ class ReviewController extends BaseController {
 	
 	private static function prepareQueryStringData($assignment, $defaults = array()) {
 		
-		$fields = array('page', 'perpage', 'completed', 'reviewsonly', 'ergonomic', 'automatic', 'sortbyquestion', 'user', 'onlyquestion');
+		$fields = array('page', 'perpage', 'completed', 'reviewsonly', 'ergonomic', 'automatic', 'sortbyquestion', 'user', 'onlyquestion', 'viewgroup');
 		
 		$result = array();
 		
@@ -284,10 +284,11 @@ class ReviewController extends BaseController {
 		$showCompleted = ($queryData['completed'] == 1);
 		$sortByQuestion = ($queryData['sortbyquestion'] == 1);
 		$onlyQuestion = $queryData['onlyquestion'];
-		
+		$viewGroup = ($queryData['viewgroup'] == 1);
+
 		// prepare the data we want to show.
 		// the result is a paginator, but we have to do it manually since we're not starting with a query. 
-		$reviewQuery = $assignment->getUserReviewDataOrderedQuery($user, $showCompleted, $reviewsOnly, $sortByQuestion, $onlyQuestion);
+		$reviewQuery = $assignment->getUserReviewDataOrderedQuery($user, $showCompleted, $reviewsOnly, $sortByQuestion, $onlyQuestion, $viewGroup);
 		
 		if (isset($onlyMarkUser)) {
 			$reviewQuery->where('answers.user_id', $onlyMarkUser->id);
@@ -392,7 +393,7 @@ class ReviewController extends BaseController {
 				$question = $questions[$record['question_id']];
 				$data['question'] = $question;
 				if ($reviewsOnly) {
-					$data['reviews'] = $question->getUserReviewsOneUserOrderedQuery($user, $data['user'])->get();
+					$data['reviews'] = $question->getUserReviewsOneUserOrderedQuery($user, $data['user'], $viewGroup)->get();
 					$data['answers'] = array();
 				} else {
 					$data['reviews'] = array();
@@ -401,7 +402,7 @@ class ReviewController extends BaseController {
 				
 			} else {
 				if ($reviewsOnly) {
-					$data['reviews'] = $assignment->getUserReviewsOneUserOrderedQuery($user, $data['user'])->get();
+					$data['reviews'] = $assignment->getUserReviewsOneUserOrderedQuery($user, $data['user'], $viewGroup)->get();
 					$data['answers'] = array();
 				} else {
 					$data['reviews'] = array();

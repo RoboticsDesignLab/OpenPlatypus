@@ -1073,16 +1073,38 @@ class Assignment extends PlatypusBaseModel {
 		return $this->getUserReviewsQuery($user)->get();
 	}
 
-	public function getUserReviewsOneUserOrderedQuery($user_id, $answer_user_id) {
-			if ($user_id instanceof User) {
+	public function getUserReviewsOneUserOrderedQuery($user_id, $answer_user_id, $viewGroup = 0) {
+		if ($user_id instanceof User) {
 			$user_id = $user_id->id;
 		}
 		
 		if ($answer_user_id instanceof User) {
 			$answer_user_id = $answer_user_id->id;
 		}
+
+		$users = array($user_id);
+		if ($this->usesGroupMarkMode() && $viewGroup) {
+			$userGroupQuery = DB::table('student_groups')
+				->select('student_groups.id')
+				->join('student_group_memberships', 'student_group_memberships.student_group_id', '=', 'student_groups.id')
+				->join('subject_members', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+				->where('student_groups.assignment_id', $this->id)
+				->where('subject_members.user_id', $user_id);
+
+			$userGroup = $userGroupQuery->first();
+
+			$groupMembersQuery = DB::table('subject_members')
+				->select('subject_members.user_id')
+				->join('student_group_memberships', 'student_group_memberships.subject_member_id', '=', 'subject_members.id')
+				->where('student_group_memberships.student_group_id', $userGroup->id);
+			$groupMembers = $groupMembersQuery->lists('subject_members.user_id');
+
+			if (count($groupMembers) > 1) {
+				$users = $groupMembers;
+			}
+		}
 		
-		$result = Review::where('user_id',$user_id)
+		$result = Review::whereIn('user_id',$users)
 			->whereHas('answer', function($q) use($answer_user_id) {
 				$q->join('questions', 'questions.id','=','answers.question_id')
 					->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')
@@ -1136,6 +1158,28 @@ class Assignment extends PlatypusBaseModel {
 		if (!is_numeric($this->id)) {
 			App::abort(500); // we are using the id in an sql string. Thus, make 100% sure it is a harmless number.
 		}
+
+		$users = array($user->id);
+		if ($this->usesGroupMarkMode() && $viewGroup) {
+			$userGroupQuery = DB::table('student_groups')
+				->select('student_groups.id')
+				->join('student_group_memberships', 'student_group_memberships.student_group_id', '=', 'student_groups.id')
+				->join('subject_members', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+				->where('student_groups.assignment_id', $this->id)
+				->where('subject_members.user_id', $user->id);
+
+			$userGroup = $userGroupQuery->first();
+
+			$groupMembersQuery = DB::table('subject_members')
+				->select('subject_members.user_id')
+				->join('student_group_memberships', 'student_group_memberships.subject_member_id', '=', 'subject_members.id')
+				->where('student_group_memberships.student_group_id', $userGroup->id);
+			$groupMembers = $groupMembersQuery->lists('subject_members.user_id');
+
+			if (count($groupMembers) > 1) {
+				$users = $groupMembers;
+			}
+		}
 		
 		if ( ($this->shuffle_mode == AssignmentShuffleMode::shufflequestions) || $forceByQuestion) {
 			
@@ -1162,7 +1206,7 @@ class Assignment extends PlatypusBaseModel {
 			if($reviewsOnly) {
 				$result
 					->join('reviews', 'answers.id','=','reviews.answer_id')
-					->where('reviews.user_id', $user->id);
+					->whereIn('reviews.user_id', $users);
 
 				if(!$showCompleted) {
 					$result->where('reviews.status', ReviewStatus::task);
@@ -1181,15 +1225,12 @@ class Assignment extends PlatypusBaseModel {
 					// join the reviews table anyway for sorting.
 					$result->leftJoin('reviews', function($q) use($user) {
 						$q->on('answers.id','=','reviews.answer_id')
-							->where('reviews.user_id', '=', $user->id);
+							->whereIn('reviews.user_id', '=', $users);
 						});
 						
 				}
 					
 			}
-
-			
-				
 				
 			// first order by the correct master questions.
 			$result->orderBy(DB::raw('(
@@ -1252,7 +1293,7 @@ class Assignment extends PlatypusBaseModel {
 			if($reviewsOnly) {
 				$result
 				->join('reviews', 'answers.id','=','reviews.answer_id')
-				->where('reviews.user_id', $user->id);
+				->whereIn('reviews.user_id', $users);
 			
 				if(!$showCompleted) {
 					$result->where('reviews.status', ReviewStatus::task);
@@ -1271,7 +1312,7 @@ class Assignment extends PlatypusBaseModel {
 					// join the reviews table anyway for sorting.
 					$result->leftJoin('reviews', function($q) use($user) {
 						$q->on('answers.id','=','reviews.answer_id')
-							->where('reviews.user_id', '=', $user->id);
+							->whereIn('reviews.user_id', '=', $users);
 						});
 				}
 			}			
@@ -1316,103 +1357,6 @@ class Assignment extends PlatypusBaseModel {
 					)'));
 			
 				
-		}
-
-		// Limit the query if suggesting the number of individual reviews from the group pool
-		if ($this->isStudent($user) && (($this->usesGroupMarkMode() && $viewGroup == 0) || !$this->usesGroupMarkMode())) {
-			$reviewQuery = DB::table('reviews')
-				->select('student_group_memberships.student_group_id')
-				->join('users', 'users.id', '=', 'reviews.user_id')
-				->join('answers', 'answers.id', '=', 'reviews.answer_id')
-				->join('questions', 'questions.id', '=', 'answers.question_id')
-				->join('subject_members', 'subject_members.user_id', '=', 'answers.user_id')
-				->join('student_group_memberships', 'student_group_memberships.subject_member_id', '=', 'subject_members.id')
-				->join('student_groups', 'student_groups.id', '=', 'student_group_memberships.student_group_id')
-				->where('reviews.user_id', $user->id)
-				->where('questions.assignment_id', $this->id)
-				->where('student_groups.assignment_id', $this->id);
-
-			$markedReviewQuery = $reviewQuery;
-			$markedCount = 0;
-			if ($this->shuffle_mode == AssignmentShuffleMode::wholeassignments) {
-				$reviewQuery = $reviewQuery
-					->distinct('student_group_memberships.student_group_id');
-				$markedReviewQuery = $markedReviewQuery
-					->select('student_group_memberships.student_group_id', DB::raw('min(reviews.status) as status_min'))
-					->groupby('student_group_memberships.student_group_id');
-				foreach($markedReviewQuery->get() as $r) {
-					if ($r->status_min == ReviewStatus::completed) {
-						$markedResults += 1;
-					}
-				}
-			} else {
-				$markedReviewQuery = $markedReviewQuery
-					->where('reviews.status', ReviewStatus::completed);
-				$markedCount = count($markedResults);
-			}
-
-			$totalReviewCount = $reviewQuery->count('student_group_memberships.student_group_id');
-
-			Log::debug('Here');
-
-			Log::debug($markedCount);
-
-			$studentGroup = DB::table('student_groups')
-				->select('student_groups.id')
-				->join('student_group_memberships', 'student_group_memberships.student_group_id', '=', 'student_groups.id')
-				->join('subject_members', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
-				->where('student_groups.assignment_id', $this->id)
-				->where('subject_members.user_id', $user->id);
-
-			if ($studentGroup->count() < 1) {
-				return $result;
-			}
-
-			$studentGroup = $studentGroup->first();
-
-			$groupMembers = DB::table('student_group_memberships')
-				->join('subject_members', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
-				->select('subject_members.user_id')
-				->where('student_group_memberships.student_group_id', $studentGroup->id);
-
-			$groupCount = $groupMembers->count();
-
-			$groupMembers = $groupMembers->get();
-			$groupPos = 0;
-			foreach($groupMembers as $member) {
-				if ($member->user_id == $user->id){
-					break;
-				}
-				$groupPos += 1;
-			}
-			//Log::debug('Here');
-			if ($groupCount <= 1) {
-				return $result;
-			}
-
-			$suggestedCount = ceil($totalReviewCount / $groupCount);
-
-			$toShow = 0;
-			if ($markedCount < $suggestedCount) {
-				$toShow = $suggestedCount - $markedCount;
-			}
-
-			if ($this->usesGroupMarkMode() && $showCompleted){
-				$toShow = $suggestedCount;
-			}
-//			Log::debug('Data');
-//			Log::debug($groupCount);
-//			Log::debug($groupPos);
-//			Log::debug($totalReviewCount);
-//			Log::debug($groupCount);
-//			Log::debug($suggestedCount);
-//			Log::debug($markedCount);
-//			Log::debug($toShow);
-//			Log::debug($showCompleted);
-//			Log::debug($this->usesGroupMarkMode());
-//			Log::debug($groupPos * $suggestedCount);
-
-			$result->skip($groupPos * $suggestedCount)->take($toShow);
 		}
 
 		return $result;

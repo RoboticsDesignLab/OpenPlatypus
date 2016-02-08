@@ -291,7 +291,7 @@ class Question extends PlatypusBaseModel {
 		return $answer;
 	}
 	
-	public function getUserReviewsOneUserOrderedQuery($user_id, $answer_user_id) {
+	public function getUserReviewsOneUserOrderedQuery($user_id, $answer_user_id, $viewGroup) {
 		if ($user_id instanceof User) {
 			$user_id = $user_id->id;
 		}
@@ -299,10 +299,33 @@ class Question extends PlatypusBaseModel {
 		if ($answer_user_id instanceof User) {
 			$answer_user_id = $answer_user_id->id;
 		}
+
+		$users = array($user_id);
+		$assignment = $this->getAssignmentReal();
+		if ($assignment->usesGroupMarkMode() && $viewGroup) {
+			$userGroupQuery = DB::table('student_groups')
+				->select('student_groups.id')
+				->join('student_group_memberships', 'student_group_memberships.student_group_id', '=', 'student_groups.id')
+				->join('subject_members', 'subject_members.id', '=', 'student_group_memberships.subject_member_id')
+				->where('student_groups.assignment_id', $assignment->id)
+				->where('subject_members.user_id', $user_id);
+
+			$userGroup = $userGroupQuery->first();
+
+			$groupMembersQuery = DB::table('subject_members')
+				->select('subject_members.user_id')
+				->join('student_group_memberships', 'student_group_memberships.subject_member_id', '=', 'subject_members.id')
+				->where('student_group_memberships.student_group_id', $userGroup->id);
+			$groupMembers = $groupMembersQuery->lists('subject_members.user_id');
+
+			if (count($groupMembers) > 1) {
+				$users = $groupMembers;
+			}
+		}
 		
 		if ($this->isMaster()) {
 	
-			$result = Review::where('user_id',$user_id)
+			$result = Review::whereIn('user_id',$users)
 				->whereHas('answer', function($q) use($answer_user_id) {
 					$q->whereHas('question', function ($q) {
 						$q->where('master_question_id', $this->id);
@@ -316,9 +339,8 @@ class Question extends PlatypusBaseModel {
 						INNER JOIN questions ON answers.question_id = questions.id
 						WHERE answers.id = reviews.answer_id
 				)'));
-			
 		} else {
-			$result = Review::where('user_id',$user_id)
+			$result = Review::whereIn('user_id',$users)
 			->whereHas('answer', function($q) use($answer_user_id) {
 				$q->where('question_id', $this->id)
 				->where('user_id',$answer_user_id);
