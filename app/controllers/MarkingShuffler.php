@@ -273,7 +273,7 @@ class MarkingShuffler {
         return array($groupList, $groupDefinition);
     }
 
-    private static function doAnswerRotationShuffle($answerDefinition, $requestedPeerNum, $logger) {
+    private static function doAnswerRotationShuffle($answerDefinition, $requestedPeerNum, $requestedTaskNum, $logger) {
 
         $answerCount = count($answerDefinition);
         $groupIds = array_keys($answerDefinition);
@@ -290,18 +290,27 @@ class MarkingShuffler {
 
         $result = array();
         $minReviewCount = 0;
+        $minAssignedCount = 0;
+        $assignedReviewCount = array();
         $answerReviewCount = array_fill(0, $answerCount, 0);
-        while ( $minReviewCount < $requestedPeerNum ) {
+        while ( $minReviewCount < $requestedPeerNum || $minAssignedCount < $requestedTaskNum) {
             $offset = rand(1, $answerCount - 1);
             foreach ($userAnswerList as $user => $groupIdx) {
                 if (!isset($result[$user])) {
                     $result[$user] = array();
                 }
+
+                if (!isset($assignedReviewCount[$user])) {
+                    $assignedReviewCount[$user] = 0;
+                }
+
                 $result[$user][] = ($groupIdx + $offset) % $answerCount;
                 $answerReviewCount[($groupIdx + $offset) % $answerCount] += 1;
+                $assignedReviewCount[$user] += 1;
             }
 
             $minReviewCount = min($answerReviewCount);
+            $minAssignedCount = min($assignedReviewCount);
         }
 
         return $result;
@@ -542,7 +551,14 @@ class MarkingShuffler {
     // create the shuffling data for the peer review process.
     private static function createGroupShuffleDataForPeerReview($assignment, $answerDefinition, $logger) {
 
-        $shuffledData = self::doAnswerRotationShuffle($answerDefinition, $assignment->number_of_peers, $logger);
+        $shuffledData = self::doAnswerRotationShuffle($answerDefinition,
+            (($assignment->review_mode == ReviewLimitMode::minreviewlimit ||
+                $assignment->review_mode == ReviewLimitMode::mincombinedlimit)
+                ? $assignment->number_of_peers : 0),
+            (($assignment->review_mode == ReviewLimitMode::minassignedlimit ||
+                $assignment->review_mode == ReviewLimitMode::mincombinedlimit)
+                ? $assignment->min_assigned_reviews : 0),
+            $logger);
         $shuffledData = self::improveGroupShuffleRandomness($answerDefinition, $shuffledData, $logger);
 
         return $shuffledData;

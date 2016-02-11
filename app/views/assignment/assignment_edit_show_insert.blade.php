@@ -21,9 +21,15 @@ The marking process will be started on {{{$assignment->autostart_marking_time}}}
 
 <li>{{{ $assignment->explainGuessMarks() }}}</li>
 
-@if($assignment->number_of_peers > 0)
-<li>Every student submission will be given to {{{ $assignment->number_of_peers }}} peers for marking.</li>
+@if($assignment->usesPeerReview())
+@if($assignment->review_mode == ReviewLimitMode::minreviewlimit || $assignment->review_mode == ReviewLimitMode::mincombinedlimit)
+<li>Every student submission will be given to at least {{{ $assignment->number_of_peers }}} peers for marking.</li>
+@endif
+@if($assignment->review_mode == ReviewLimitMode::minassignedlimit|| $assignment->review_mode == ReviewLimitMode::mincombinedlimit)
+<li>Every student will receive at least {{{ $assignment->min_assigned_reviews }}} assignments for marking.</li>
+@endif
 <li>{{{ $assignment->explainShuffleMode() }}}</li>
+
 <li>The peer reviews are due on {{{ $assignment->peers_due }}}.</li>
 @else
 <li>The peer review mode is deactivated.</li>

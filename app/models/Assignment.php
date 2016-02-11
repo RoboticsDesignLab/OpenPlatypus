@@ -4,8 +4,6 @@ use McCool\LaravelAutoPresenter\PresenterInterface;
 use Carbon\Carbon;
 use Platypus\Helpers\PlatypusBool;
 
-
-
 class AssignmentVisibility extends PlatypusEnum {
 	const hidden = 0;
 	const posted = 1;
@@ -13,21 +11,23 @@ class AssignmentVisibility extends PlatypusEnum {
 	const withmarkingscheme = 3;
 }
 
-
 class AssignmentGroupWorkMode extends PlatypusEnum {
 	const no = 0;
 	const individualsolutions = 1;
 	const groupsolutions = 2;
 }
 
-
+class ReviewLimitMode extends PlatypusEnum {
+	const nostudentreview = 0;
+	const minreviewlimit = 1;
+	const minassignedlimit = 2;
+	const mincombinedlimit = 3;
+}
 
 class AssignmentGroupSelectionMode extends PlatypusEnum {
 	const lecturer = 0;
 	const selfservice = 1;
 }
-
-
 
 class AssignmentGuessMarks extends PlatypusEnum {
 	const no = 0;
@@ -42,14 +42,10 @@ class AssignmentMarkByTutors extends PlatypusEnum {
 	const allNoViewReviews = 3;
 }
 
-
-
 class AssignmentShuffleMode extends PlatypusEnum {
 	const shufflequestions = 0;
 	const wholeassignments = 1;
 }
-
-
 
 class AssignmentLatePolicy extends PlatypusEnum {
 	const donotaccept = 0;
@@ -57,7 +53,6 @@ class AssignmentLatePolicy extends PlatypusEnum {
 	const markbytutor = 2;
 	const markbylecturer = 3;
 }
-
 
 class AssignmentMarksReleased extends PlatypusEnum {
 	const none = 0;
@@ -74,7 +69,6 @@ class AssignmentGroupMarkMode extends PlatypusEnum {
 	const individual = 1;
 }
 
-
 class Assignment extends PlatypusBaseModel {
 	
 	// The database table used by the model.
@@ -82,81 +76,83 @@ class Assignment extends PlatypusBaseModel {
 	
 	// define the types that are taken as enum. These will automatically be validated against the proper range.
 	public static $enumColumns = array (
-			'group_work_mode' => 'AssignmentGroupWorkMode',
-			'group_selection_mode' => 'AssignmentGroupSelectionMode',
-			'group_mark_mode' => 'AssignmentGroupMarkMode',
-			'guess_marks' => 'AssignmentGuessMarks',
-			'mark_by_tutors' => 'AssignmentMarkByTutors',
-			'shuffle_mode' => 'AssignmentShuffleMode',
-			'late_policy' => 'AssignmentLatePolicy',
-			'marks_released' => 'AssignmentMarksReleased',
-			'offline' => 'PlatypusBool',
-			'visibility' => 'AssignmentVisibility',
-			'marking_started' => 'PlatypusBool',
+		'group_work_mode' => 'AssignmentGroupWorkMode',
+		'group_selection_mode' => 'AssignmentGroupSelectionMode',
+		'group_mark_mode' => 'AssignmentGroupMarkMode',
+		'guess_marks' => 'AssignmentGuessMarks',
+		'mark_by_tutors' => 'AssignmentMarkByTutors',
+		'shuffle_mode' => 'AssignmentShuffleMode',
+		'review_mode' => 'ReviewLimitMode',
+		'late_policy' => 'AssignmentLatePolicy',
+		'marks_released' => 'AssignmentMarksReleased',
+		'offline' => 'PlatypusBool',
+		'visibility' => 'AssignmentVisibility',
+		'marking_started' => 'PlatypusBool',
 	);
-	
 
 	// fields we can fill directly from user input.
 	protected $fillable = array (
-				'title',
-				'offline',
-				'visibility',
-				'answers_due',
-				'group_work_mode',
-				'group_selection_mode',
-				'group_mark_mode',
-				'group_size_min',
-				'group_size_max',
-			    'guess_marks',
-				'mark_by_tutors',
-				'tutors_due',
-				'number_of_peers',
-				'peers_due',
-				'shuffle_mode',
-				'autostart_marking_time',
-				'late_policy',
-				'marks_released',
-		);
+		'title',
+		'offline',
+		'visibility',
+		'answers_due',
+		'group_work_mode',
+		'group_selection_mode',
+		'group_mark_mode',
+		'group_size_min',
+		'group_size_max',
+		'guess_marks',
+		'mark_by_tutors',
+		'tutors_due',
+		'number_of_peers',
+		'min_assigned_reviews',
+		'peers_due',
+		'shuffle_mode',
+		'review_mode',
+		'autostart_marking_time',
+		'late_policy',
+		'marks_released',
+	);
 	
 	// fields we set with default values
 	public static $defaultValues = array(
-			'visibility' => AssignmentVisibility::hidden,
-			'group_work_mode' => AssignmentGroupWorkMode::no,
-			'group_mark_mode' => AssignmentGroupMarkMode::group,
-			'mark_by_tutors' => AssignmentMarkByTutors::all,
-			'number_of_peers' => 3,
-			'shuffle_mode' => AssignmentShuffleMode::shufflequestions,
-			'marking_started' => PlatypusBool::false,
-			'offline' => PlatypusBool::false,
-			'autostart_marking_time' => NULL,
-			'late_policy' => AssignmentLatePolicy::donotaccept,
-			'marks_released' => AssignmentMarksReleased::none,
+		'visibility' => AssignmentVisibility::hidden,
+		'group_work_mode' => AssignmentGroupWorkMode::no,
+		'group_mark_mode' => AssignmentGroupMarkMode::group,
+		'mark_by_tutors' => AssignmentMarkByTutors::all,
+		'number_of_peers' => 3,
+		'min_assigned_reviews' => 0,
+		'shuffle_mode' => AssignmentShuffleMode::shufflequestions,
+		'shuffle_min' => ReviewLimitMode::minreviewlimit,
+		'marking_started' => PlatypusBool::false,
+		'offline' => PlatypusBool::false,
+		'autostart_marking_time' => NULL,
+		'late_policy' => AssignmentLatePolicy::donotaccept,
+		'marks_released' => AssignmentMarksReleased::none,
 	);
-	
 	
 	// fields we want converted to Carbon timestamps on the fly.
 	public function getDates() {
 		return array (
-				'created_at',
-				'updated_at',
-				'answers_due',
-				'tutors_due',
-				'peers_due',
-				'autostart_marking_time' 
+			'created_at',
+			'updated_at',
+			'answers_due',
+			'tutors_due',
+			'peers_due',
+			'autostart_marking_time'
 		);
 	}
-	
 
 	// define the relationships to other models
 	public static $relationsData = array (
-			'subject' => array (self::BELONGS_TO,'Subject', 'foreignKey' => 'subject_id'),
-			'introduction' => array (self::BELONGS_TO,'TextBlock', 'foreignKey' => 'introduction_id'),
-			'questions'  => array(self::HAS_MANY, 'Question', 'foreignKey' => 'assignment_id'),
-			'assignmentTutors'  => array(self::HAS_MANY, 'AssignmentTutor', 'foreignKey' => 'assignment_id'),
-			'studentGroups'  => array(self::HAS_MANY, 'StudentGroup', 'foreignKey' => 'assignment_id'),
-			'events'  => array(self::HAS_MANY, 'AssignmentEvent', 'foreignKey' => 'assignment_id'),
-			'assignmentMarks' => array(self::HAS_MANY, 'AssignmentMark', 'foreignKey' => 'assignment_id'),
-	);	
+		'subject' => array (self::BELONGS_TO,'Subject', 'foreignKey' => 'subject_id'),
+		'introduction' => array (self::BELONGS_TO,'TextBlock', 'foreignKey' => 'introduction_id'),
+		'questions'  => array(self::HAS_MANY, 'Question', 'foreignKey' => 'assignment_id'),
+		'assignmentTutors'  => array(self::HAS_MANY, 'AssignmentTutor', 'foreignKey' => 'assignment_id'),
+		'studentGroups'  => array(self::HAS_MANY, 'StudentGroup', 'foreignKey' => 'assignment_id'),
+		'events'  => array(self::HAS_MANY, 'AssignmentEvent', 'foreignKey' => 'assignment_id'),
+		'assignmentMarks' => array(self::HAS_MANY, 'AssignmentMark', 'foreignKey' => 'assignment_id'),
+	);
 	
 	// pseudo relationhips go here
 	public function activeStudents() {
@@ -195,7 +191,8 @@ class Assignment extends PlatypusBaseModel {
 			});
 		});
 		
-		// Unfortunately there is a shortcoming in Laravel's SQL generator when it comes to self-referencing relationships. It doesn't alias the second instance of the table.
+		// Unfortunately there is a shortcoming in Laravel's SQL generator when it comes
+		// to self-referencing relationships. It doesn't alias the second instance of the table.
 		// Thus, we do the join stuff manually. 
 		//return Question::leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')->select('questions.*')->where(function($q) {
 		//		$q->where('questions.assignment_id', $this->id)
@@ -214,9 +211,10 @@ class Assignment extends PlatypusBaseModel {
 	
 	public function allAnswers() {
 		return Answer::whereHas('question', function($q){
-			$q->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')->where(function($q) {
-				$q->where('questions.assignment_id', $this->id)
-					->orWhere('master_questions.assignment_id', $this->id);
+			$q->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')
+				->where(function($q) {
+					$q->where('questions.assignment_id', $this->id)
+						->orWhere('master_questions.assignment_id', $this->id);
 			});
 		});
 	}
@@ -224,9 +222,10 @@ class Assignment extends PlatypusBaseModel {
 	public function allReviews($role = null) {
 		$result = Review::whereHas('answer', function($q) {
 			$q->whereHas('question', function($q){
-				$q->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')->where(function($q) {
-					$q->where('questions.assignment_id', $this->id)
-					->orWhere('master_questions.assignment_id', $this->id);
+				$q->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')
+					->where(function($q) {
+						$q->where('questions.assignment_id', $this->id)
+						->orWhere('master_questions.assignment_id', $this->id);
 				});
 			});
 		});
@@ -260,7 +259,9 @@ class Assignment extends PlatypusBaseModel {
 	
 	public function allQuestionMarks() {
 		return QuestionMark::whereHas('question', function($q){
-			$q->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')->where(function($q) {
+			$q->leftJoin('questions as master_questions', 'questions.master_question_id', '=', 'master_questions.id')
+				->where(function($q) {
+
 				$q->where('questions.assignment_id', $this->id)
 				->orWhere('master_questions.assignment_id', $this->id);
 			});
@@ -272,7 +273,9 @@ class Assignment extends PlatypusBaseModel {
 	}
 	
 	public function eventsOrdered() {
-		return $this->events()->where('level', '<', AssignmentEventLevel::endOfNormalRange)->orderBy('created_at', 'desc')->orderBy('id', 'desc');
+		return $this->events()
+			->where('level', '<', AssignmentEventLevel::endOfNormalRange)
+			->orderBy('created_at', 'desc')->orderBy('id', 'desc');
 	}
 	
 	public function submissionEventsOrdered() {
@@ -284,12 +287,12 @@ class Assignment extends PlatypusBaseModel {
 			$q->where(function($q) {
 					$q->where('type',QuestionType::simple)
 					->where('assignment_id', $this->id);
-				})
-				->orWhere(function($q) {
-					$q->where('type',QuestionType::subquestion)
-					->whereRaw('master_question_id IN (SELECT master.id FROM questions as master WHERE master.assignment_id = ?)', array($this->id));
-				});
+			})
+			->orWhere(function($q) {
+				$q->where('type',QuestionType::subquestion)
+				->whereRaw('master_question_id IN (SELECT master.id FROM questions as master WHERE master.assignment_id = ?)', array($this->id));
 			});
+		});
 	}
 	
 	public function questionsWithSubquestionsWithoutMastersOrdered() {
@@ -319,8 +322,7 @@ class Assignment extends PlatypusBaseModel {
 	
 	// point out that this model uses a presenter to tweak fields whe n showing them in views.
 	public static $presenterClass='AssignmentPresenter';
-	
-	
+
 	protected function runCustomValidationRules(&$success) {
 		$subject = $this->subject;
 		
@@ -342,16 +344,16 @@ class Assignment extends PlatypusBaseModel {
 			foreach($this->studentGroups as $group) {
 				if ($group->hasMultipleSubmittedAnswersForAQuestion()) {
 					$success = false;
-					$this->validationErrors->add('group_work_mode', 'Students have already submitted multiple andwers for a question within a student group.');
+					$this->validationErrors->add('group_work_mode',
+						'Students have already submitted multiple andwers for a question within a student group.');
 					break;
 				}
-			}			
+			}
 		}
 	}
 	
-
-	
-	// This returns the questions correctly ordered as they should be displayed and also includes sub-questions in the ordering.
+	// This returns the questions correctly ordered as they should be
+	// displayed and also includes sub-questions in the ordering.
 	public function getQuestionsOrderedWithSubquestions() {
 		$result = array();
 		foreach($this->questions_ordered as $question) {
@@ -379,7 +381,6 @@ class Assignment extends PlatypusBaseModel {
 		}
 		return $result;
 	}
-
 	
 	public function getNextUnusedQuestionPosition() {
 		$maxUsed = $this->questions()->max('position');
@@ -389,8 +390,6 @@ class Assignment extends PlatypusBaseModel {
 			return $maxUsed + 1;
 		}
 	}
-	
-	
 	
 	// the automatic conversion for timestamps doesn't work well with Arden. We make our own routines
 	public function setAnswersDueAttribute($value) {
@@ -494,7 +493,7 @@ class Assignment extends PlatypusBaseModel {
 	}
 	
 	public function usesPeerReview() {
-		return $this->number_of_peers > 0;
+		return $this->review_mode != ReviewLimitMode::nostudentreview;
 	}
 	
 	public function usesTutorMarking() {
@@ -638,7 +637,10 @@ class Assignment extends PlatypusBaseModel {
 		if ($this->mayManageAssignment($user)) return true;
 		if ($this->isQuestionObserver($user)) return true;
 		if ($this->isFullObserver($user)) return true;
-		if ( ( ($this->visibility == AssignmentVisibility::withsolutions) || ($this->visibility == AssignmentVisibility::withmarkingscheme) ) && $this->markingHasStarted() ) {
+		if ( ( ($this->visibility == AssignmentVisibility::withsolutions)
+				|| ($this->visibility == AssignmentVisibility::withmarkingscheme) )
+			&& $this->markingHasStarted() ) {
+
 			if($this->isActiveStudent($user)) return true;
 			if($this->isTutor($user)) return true;
 		}
@@ -667,7 +669,6 @@ class Assignment extends PlatypusBaseModel {
 		if ($this->isFullObserver($user)) return true;
 		return false;
 	}
-	
 
 	public function mayEditQuestionPercentages(User $user) {
 		// a shortcut for faster evaluation if marking hasn't started.
@@ -695,8 +696,6 @@ class Assignment extends PlatypusBaseModel {
 		return $this->mayEditQuestions($user);
 	}
 	
-	
-	
 	public function mayViewAssignmentGroups(User $user) {
 		if (!$this->usesGroups()) return false;
 		if ($this->mayManageAssignment($user)) return true;
@@ -717,10 +716,8 @@ class Assignment extends PlatypusBaseModel {
 		if (!$this->markingHasStarted()) return false;
 		return $this->mayManageAssignment($user);
 	}
-	
-	
-	public function maySetFinalMarks(User $user) {
 
+	public function maySetFinalMarks(User $user) {
 		if (!$this->markingHasStarted()) return false;
 		
 		if (!$this->mayViewAssignment($user)) return false;
@@ -776,7 +773,8 @@ class Assignment extends PlatypusBaseModel {
 		return $this->mayManageMarkingProcess($user);
 	}
 	
-	// this is an odd one. It is meant to be true if the user has review tasks (open or submitted) and the page to work on them should be shown.
+	// this is an odd one. It is meant to be true if the user has review tasks
+	// (open or submitted) and the page to work on them should be shown.
 	public function mayWriteReviews(User $user) {
 		if ($this->getUserReviewsQuery($user)->exists()) return true;
 		
@@ -789,7 +787,6 @@ class Assignment extends PlatypusBaseModel {
 	}
 	
 	public function maySeeResultsPageAsStudent(User $user) {
-		
 		if (!$this->markingHasStarted()) return false;
 		
 		if (!$this->isActiveStudent($user)) return false;
@@ -1053,7 +1050,6 @@ class Assignment extends PlatypusBaseModel {
 	}
 	
 	public function studentHasNonEmptyAnswers(User $user) {
-	
 		foreach(getUserAnswers($user) as $answer) {
 			if(!$answer->isEmpty()) return true;
 		}
@@ -1406,9 +1402,7 @@ class Assignment extends PlatypusBaseModel {
 		$model->mark = $mark;
 		$model->save();
 	}
-	
-	
-	
+
 	public function isOpenForSubmissions() {
 		if ($this->visibility == AssignmentVisibility::hidden) {
 			return false;
@@ -1440,7 +1434,6 @@ class Assignment extends PlatypusBaseModel {
 		// we should never reach this line.
 		App::abort(500);
 	}
-	
 
 	public function logEvent($level, $text) {
 		$event = new AssignmentEvent();
@@ -1463,7 +1456,7 @@ class Assignment extends PlatypusBaseModel {
 			$table->string('title', 1000)->index();
 			
 			$table->integer('introduction_id')->unsigned();
-			$table->foreign('introduction_id')->references('id')->on('text_blocks')->onDelete('restrict');			
+			$table->foreign('introduction_id')->references('id')->on('text_blocks')->onDelete('restrict');
 			
 			$table->tinyInteger('offline')->default(PlatypusBool::false);
 			$table->tinyInteger('visibility')->default(AssignmentVisibility::hidden);
@@ -1477,8 +1470,10 @@ class Assignment extends PlatypusBaseModel {
 			$table->tinyInteger('mark_by_tutors')->default(AssignmentMarkByTutors::all);
 			$table->timestamp('tutors_due')->nullable()->index();
 			$table->integer('number_of_peers')->unsigned()->default(0);
+			$table->integer('min_assigned_reviews')->unsigned()->default(0);
 			$table->timestamp('peers_due')->nullable()->index()->default(NULL);
 			$table->tinyInteger('shuffle_mode')->default(AssignmentShuffleMode::shufflequestions);
+			$table->tinyInteger('review_mode')->default(ReviewLimitMode::minreviewlimit);
 			$table->tinyInteger('marking_started')->default(PlatypusBool::false);
 			$table->timestamp('autostart_marking_time')->nullable()->index()->default(NULL);
 			$table->tinyInteger('late_policy')->default(AssignmentLatePolicy::donotaccept);
@@ -1486,37 +1481,35 @@ class Assignment extends PlatypusBaseModel {
 			
 			$table->index(array (
 					'marking_started',
-					'autostart_marking_time' 
+					'autostart_marking_time'
 			));
 		});
-
 	}
 }
 
-
 Assignment::$rules = array (
-		'subject_id' => 'required|integer',
-		'title' => 'required|min:3|max:200',
-		'offline' => 'required|boolean',
-		// visibility is enum
-		'answers_due' => 'required|date|carbon',
-		// group_work_mode is enum
-		// group_selection_mode is enum
-		// group_mark_mode is enum
-		'group_size_min' => 'required_if:group_selection_mode,' . AssignmentGroupSelectionMode::selfservice . '|integer|between:1,100',
-		'group_size_max' => 'required_if:group_selection_mode,' . AssignmentGroupSelectionMode::selfservice . '|integer|between:2,100|equallarger:group_size_min',
-		// guess_marks is enum
-		// mark_by_tutors is enum
-		'tutors_due' => 'date|carbon|afterfield:answers_due',
-		'number_of_peers' => 'integer|between:0,9999',
-		'peers_due' => 'required_if_not:number_of_peers,0|date|carbon|afterfield:answers_due',
-		// shuffle_mode is enum
-		'marking_started' => 'required', 
-		'autostart_marking_time' => 'date|carbon|afterequalfield:answers_due|beforefield:peers_due|beforefield:tutors_due|beforefield:peers_due',
-// late_policy is enum
-// marks_released is enum
+	'subject_id' => 'required|integer',
+	'title' => 'required|min:3|max:200',
+	'offline' => 'required|boolean',
+	// visibility is enum
+	'answers_due' => 'required|date|carbon',
+	// group_work_mode is enum
+	// group_selection_mode is enum
+	// group_mark_mode is enum
+	'group_size_min' => 'required_if:group_selection_mode,' . AssignmentGroupSelectionMode::selfservice . '|integer|between:1,100',
+	'group_size_max' => 'required_if:group_selection_mode,' . AssignmentGroupSelectionMode::selfservice . '|integer|between:2,100|equallarger:group_size_min',
+	// guess_marks is enum
+	// mark_by_tutors is enum
+	'tutors_due' => 'date|carbon|afterfield:answers_due',
+	'number_of_peers' => 'required_if_not:review_mode,0|integer|between:0,9999',
+	'min_assigned_reviews' => 'required_if_not:review_mode,0|integer|between:0,9999',
+	'peers_due' => 'required_if_not:review_mode,0|date|carbon|afterfield:answers_due',
+	// shuffle_mode is enum
+	'marking_started' => 'required',
+	'autostart_marking_time' => 'date|carbon|afterequalfield:answers_due|beforefield:peers_due|beforefield:tutors_due|beforefield:peers_due',
+	// late_policy is enum
+	// marks_released is enum
 );
-
 
 // Add code to attach a text block if the assignment is new.
 Assignment::creating(function($assignment) {
@@ -1527,7 +1520,6 @@ Assignment::creating(function($assignment) {
 	}
 });
 
-
 // Add code to delete groups if group mode has been disabled.
 Assignment::saved(function($assignment) {
 	if (!$assignment->usesGroups()) {
@@ -1535,8 +1527,7 @@ Assignment::saved(function($assignment) {
 		StudentGroupSuggestion::where('assignment_id', $assignment->id)->delete();
 	}
 });
-	
-	
+
 // A presenter that formats the dates when showing them in a view.
 class AssignmentPresenter extends PlatypusBasePresenter {
 
@@ -1561,7 +1552,6 @@ class AssignmentPresenter extends PlatypusBasePresenter {
 		return $this->resource->autostart_marking_time->format('d/m/Y (H:i:s)');
 	}
 	
-	
 	public function group_size_max() {
 		if ($this->resource->group_size_max == 0) return '';
 		return $this->resource->group_size_max;
@@ -1582,63 +1572,69 @@ class AssignmentPresenter extends PlatypusBasePresenter {
 	}
 
 	public static $explainGuessMarks = array (
-				AssignmentGuessMarks::yes => "The students must guess their own marks when submitting an answer.",
-				AssignmentGuessMarks::optional => "The students can optionally guess their own marks when submitting an answer.",
-				AssignmentGuessMarks::no => "The students aren't asked to guess their own marks when submitting an answer.",
+		AssignmentGuessMarks::yes => "The students must guess their own marks when submitting an answer.",
+		AssignmentGuessMarks::optional => "The students can optionally guess their own marks when submitting an answer.",
+		AssignmentGuessMarks::no => "The students aren't asked to guess their own marks when submitting an answer.",
 	);
 	
 	public static $explainVisibility = array (
-			AssignmentVisibility::hidden => 'The assignment is invisible to students and tutors.',
-			AssignmentVisibility::posted => 'The assignment is active and the questions are visible to students.', 
-			AssignmentVisibility::withsolutions => 'The assignment is active and the questions are visible to students. The solutions are shown after the marking process has started.',
-			AssignmentVisibility::withmarkingscheme => 'The assignment is active and the questions are visible to students. The solutions and marking scheme are shown after the marking process has started.', 
+		AssignmentVisibility::hidden => 'The assignment is invisible to students and tutors.',
+		AssignmentVisibility::posted => 'The assignment is active and the questions are visible to students.',
+		AssignmentVisibility::withsolutions => 'The assignment is active and the questions are visible to students. The solutions are shown after the marking process has started.',
+		AssignmentVisibility::withmarkingscheme => 'The assignment is active and the questions are visible to students. The solutions and marking scheme are shown after the marking process has started.',
 	);
 	
 	public static $explainLatePolicy = array (
-			AssignmentLatePolicy::donotaccept => 'Do not accept late submissions of student answers.',
-			AssignmentLatePolicy::acceptbeforemarking => 'Accept late submissions as long as marking hasn\'t started.',
-			AssignmentLatePolicy::markbytutor => 'Accept late submissions. If marking has started they will be marked by the tutors (no peer review).',
-			AssignmentLatePolicy::markbylecturer => 'Accept late submissions. If marking has started they will be marked by the lecturer only.',
-			);
+		AssignmentLatePolicy::donotaccept => 'Do not accept late submissions of student answers.',
+		AssignmentLatePolicy::acceptbeforemarking => 'Accept late submissions as long as marking hasn\'t started.',
+		AssignmentLatePolicy::markbytutor => 'Accept late submissions. If marking has started they will be marked by the tutors (no peer review).',
+		AssignmentLatePolicy::markbylecturer => 'Accept late submissions. If marking has started they will be marked by the lecturer only.',
+	);
 	
 	public static $explainShuffleMode = array (
-			AssignmentShuffleMode::shufflequestions => 'The questions are shuffled individually before assigning them for peer review.',
-			AssignmentShuffleMode::wholeassignments => 'Assignment sheets are kept together when assigning them for peer review.',
+		AssignmentShuffleMode::shufflequestions => 'The questions are shuffled individually before assigning them for peer review.',
+		AssignmentShuffleMode::wholeassignments => 'Assignment sheets are kept together when assigning them for peer review.',
+	);
+
+	public static $explainReviewMode = array(
+		ReviewLimitMode::nostudentreview => 'Student reviews are disabled.',
+		ReviewLimitMode::minreviewlimit => 'Ensure each answer has a minimum number of review tasks.',
+		ReviewLimitMode::minassignedlimit => 'Ensure each student has a minimum number of review tasks.',
+		ReviewLimitMode::mincombinedlimit => 'Ensure both answers and students each have a minimum task count.',
 	);
 
 	public static $explainMarkByTutors = array (
-			AssignmentMarkByTutors::none => 'No marking is done by the tutors.',
-			AssignmentMarkByTutors::all => 'All student answers have to be marked by the tutors. Tutors can see and rate peer reviews.',
-			AssignmentMarkByTutors::allNoRateReviews => 'All student answers have to be marked by the tutors. Tutors can see but not rate peer reviews.',
-			AssignmentMarkByTutors::allNoViewReviews => 'All student answers have to be marked by the tutors. Tutors cannot see peer reviews.',			
+		AssignmentMarkByTutors::none => 'No marking is done by the tutors.',
+		AssignmentMarkByTutors::all => 'All student answers have to be marked by the tutors. Tutors can see and rate peer reviews.',
+		AssignmentMarkByTutors::allNoRateReviews => 'All student answers have to be marked by the tutors. Tutors can see but not rate peer reviews.',
+		AssignmentMarkByTutors::allNoViewReviews => 'All student answers have to be marked by the tutors. Tutors cannot see peer reviews.',
 	);
 
 	public static $explainMarksReleased = array (
-			AssignmentMarksReleased::none => 'Do not show any reviews or marks to students.',
-			AssignmentMarksReleased::rapidrelease => 'Students can see the available reviews they received after they finished their marking tasks.',
-			AssignmentMarksReleased::rapidreleasequestionmarks => 'Students can see their received reviews and marks for questions after they finished their marking tasks.',
-			AssignmentMarksReleased::rapidreleasefinal => 'Students can see all their results after they finished their marking tasks.',
-			AssignmentMarksReleased::reviews => 'All students can see the reviews they received.',
-			AssignmentMarksReleased::questionmarks => 'All students can see their received reviews and marks for questions.',
-			AssignmentMarksReleased::finalmarks => 'All final marks and reviews are released.' 
+		AssignmentMarksReleased::none => 'Do not show any reviews or marks to students.',
+		AssignmentMarksReleased::rapidrelease => 'Students can see the available reviews they received after they finished their marking tasks.',
+		AssignmentMarksReleased::rapidreleasequestionmarks => 'Students can see their received reviews and marks for questions after they finished their marking tasks.',
+		AssignmentMarksReleased::rapidreleasefinal => 'Students can see all their results after they finished their marking tasks.',
+		AssignmentMarksReleased::reviews => 'All students can see the reviews they received.',
+		AssignmentMarksReleased::questionmarks => 'All students can see their received reviews and marks for questions.',
+		AssignmentMarksReleased::finalmarks => 'All final marks and reviews are released.'
 	);
 
 	public static $explainGroupWorkMode = array (
-			AssignmentGroupWorkMode::no => 'No group work allowed.',
-			AssignmentGroupWorkMode::individualsolutions => 'Group work allowed, but individual submissions are required.',
-			AssignmentGroupWorkMode::groupsolutions => 'Group work allowed, only one submission per group is allowed.', 
+		AssignmentGroupWorkMode::no => 'No group work allowed.',
+		AssignmentGroupWorkMode::individualsolutions => 'Group work allowed, but individual submissions are required.',
+		AssignmentGroupWorkMode::groupsolutions => 'Group work allowed, only one submission per group is allowed.',
 	);
 
 	public static $explainGroupSelectionMode = array (
-			AssignmentGroupSelectionMode::lecturer => 'Groups are only assigned by the lecturer.',
-			AssignmentGroupSelectionMode::selfservice => 'Students can self-assign their groups.',
+		AssignmentGroupSelectionMode::lecturer => 'Groups are only assigned by the lecturer.',
+		AssignmentGroupSelectionMode::selfservice => 'Students can self-assign their groups.',
 	);
 
 	public static $explainGroupMarkMode = array(
-			AssignmentGroupMarkMode::group => 'Assignments are marked by the group. The group can see all assigned reviews, with each student allotted a suggested amount of reviews.',
-			AssignmentGroupMarkMode::individual => 'Reviews are assigned to the individual to be marked individually.',
+		AssignmentGroupMarkMode::group => 'Assignments are marked by the group. The group can see all assigned reviews, with each student allotted a suggested amount of reviews.',
+		AssignmentGroupMarkMode::individual => 'Reviews are assigned to the individual to be marked individually.',
 	);
-	
 	
 	public function getEditorWarnings() {
 		$result = array ();
