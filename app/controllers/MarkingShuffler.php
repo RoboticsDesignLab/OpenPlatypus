@@ -306,6 +306,8 @@ class MarkingShuffler {
 
         $answerCount = count($answerList);
 
+        Log::debug($answerList);
+
         $result = array();
         $minReviewCount = 0;
         $minAssignedCount = 0;
@@ -326,7 +328,7 @@ class MarkingShuffler {
                     $assignedReviewCount[$user] = 0;
                 }
 
-                $userOffset = $answerOffset + $offset % $answerCount;
+                $userOffset = ($answerOffset + $offset) % $answerCount;
                 $result[$user][] = $answerList[$userOffset];
                 $answerReviewCount[$userOffset] += 1;
                 $assignedReviewCount[$user] += 1;
