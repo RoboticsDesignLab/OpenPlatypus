@@ -275,27 +275,49 @@ class MarkingShuffler {
 
     private static function doAnswerRotationShuffle($answerDefinition, $requestedPeerNum, $requestedTaskNum, $logger) {
 
-        $answerCount = count($answerDefinition);
-        $groupIds = array_keys($answerDefinition);
-
-        $userAnswerList = array();
+        $answerList = array();
+        $userAnswerOffset = array();
+        $maxGroupAnswers = 0;
         foreach($answerDefinition as $group => $data) {
+            $answerCount = count($data['answers']);
+            if ($answerCount > $maxGroupAnswers) {
+                $maxGroupAnswers = $answerCount;
+            }
+
             foreach($data['users'] as $user) {
-                $groupIdx = array_keys($groupIds, $group);
-                if (count($groupIdx) > 0) {
-                    $userAnswerList[$user] = $groupIdx[0];
+                $userAnswerOffset[$user] = count($answerList);
+
+                if ($answerCount > 1) {
+                    $answerIdx = array_search($user, array_keys($data['answers']));
+                    if ($answerIdx != false) {
+                        $userAnswerOffset[$user] += $answerIdx;
+                    }
                 }
             }
+
+            foreach($data['answers'] as $idx => $answer) {
+                $answerData = array();
+                $answerData['group'] = $group;
+                $answerData['idx'] = $idx;
+                $answerData['answer'] = $answer;
+                $answerList[] = $answerData;
+            }
         }
+
+        $answerCount = count($answerList);
 
         $result = array();
         $minReviewCount = 0;
         $minAssignedCount = 0;
         $assignedReviewCount = array();
         $answerReviewCount = array_fill(0, $answerCount, 0);
-        while ( $minReviewCount < $requestedPeerNum || $minAssignedCount < $requestedTaskNum) {
-            $offset = rand(1, $answerCount - 1);
-            foreach ($userAnswerList as $user => $groupIdx) {
+        while ( $minReviewCount < $requestedPeerNum || $minAssignedCount < $requestedTaskNum ) {
+
+            //Offset should be large enough to skip answers from the same group
+            //small enough to not wrap back to same group answers
+            $offset = rand($maxGroupAnswers, $answerCount - $maxGroupAnswers - 1);
+
+            foreach ($userAnswerOffset as $user => $answerOffset) {
                 if (!isset($result[$user])) {
                     $result[$user] = array();
                 }
@@ -304,13 +326,15 @@ class MarkingShuffler {
                     $assignedReviewCount[$user] = 0;
                 }
 
-                $result[$user][] = ($groupIdx + $offset) % $answerCount;
-                $answerReviewCount[($groupIdx + $offset) % $answerCount] += 1;
+                $userOffset = $answerOffset + $offset % $answerCount;
+                $result[$user][] = $answerList[$userOffset];
+                $answerReviewCount[$userOffset] += 1;
                 $assignedReviewCount[$user] += 1;
             }
 
             $minReviewCount = min($answerReviewCount);
             $minAssignedCount = min($assignedReviewCount);
+
         }
 
         return $result;
@@ -360,8 +384,8 @@ class MarkingShuffler {
                 $target = $shuffledData[$targetUser][$targetPosition];
 
                 // we have a target, so check if the swap would be valid.
-                if ($groupList[$targetUser] == $source) continue;
-                if ($groupList[$sourceUser] == $target) continue;
+                if ($groupList[$targetUser] == $source['group']) continue;
+                if ($groupList[$sourceUser] == $target['group']) continue;
                 if (in_array($source, $shuffledData[$targetUser])) continue;
                 if (in_array($target, $shuffledData[$sourceUser])) continue;
 
@@ -480,8 +504,8 @@ class MarkingShuffler {
         $reviewTasks = array();
 
         foreach($shuffledData as $user_id => $tasks) {
-            foreach($tasks as $answerIdx) {
-                foreach($answerDefinition[$answerIdx]['answers'] as $answer_id) {
+            foreach($tasks as $answer) {
+                foreach($answerDefinition[$answer['group']]['answers'][$answer['idx']] as $answer_id) {
                     $reviewTasks[] = array('answer_id' => $answer_id, 'user_id' => $user_id, 'reviewer_role' => $role);
                 }
             }
@@ -619,7 +643,7 @@ class MarkingShuffler {
                 return;
             }
 
-            if ($assignment->onlyOneAnswerPerGroup()){
+            if ($assignment->usesGroups()){
                 $answerResult = $questionOrAssignment->submittedAnswers()->get(array('id','user_id'));
 
                 list($groupList, $groupDefinition) = self::collectGroups($assignment, $user_ids);
@@ -649,7 +673,14 @@ class MarkingShuffler {
 
                     foreach($answerDefinition as $idx => $adef) {
                         if (($answer['group_id'] == $adef['group']) && in_array($userId, $adef['users'])) {
-                            $answerDefinition[$idx]['answers'][] = $answer['id'];
+                            if ($assignment->onlyOneAnswerPerGroup()) {
+                                $answerDefinition[$idx]['answers'][0][] = $answer['id'];
+                            } else {
+                                if (!key_exists($answer['user_id'], $answerDefinition[$idx]['answers'])) {
+                                    $answerDefinition[$idx]['answers'][$answer['user_id']] = array();
+                                }
+                                $answerDefinition[$idx]['answers'][$answer['user_id']][] = $answer['id'];
+                            }
                             $answerHandled = true;
                             break;
                         }
@@ -658,7 +689,14 @@ class MarkingShuffler {
                     if (!$answerHandled){
                         $adef = array();
                         $adef['group'] = $answer['group_id'];
-                        $adef['answers'] = array($answer['id']);
+
+                        if ($assignment->onlyOneAnswerPerGroup()) {
+                            $adef['answers'] = array(array($answer['id']));
+                        } else {
+                            $adef['answers'] = array();
+                            $adef['answers'][$answer['user_id']] = array($answer['id']);
+                        }
+
                         $adef['users'] = $answer['users'];
                         $answerDefinition[] = $adef;
                     }
