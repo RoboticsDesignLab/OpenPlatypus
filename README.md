@@ -70,8 +70,8 @@ Platypus needs a php installation as well as a mysql database.
 
 2. Create a folder `app/config/environmentName`
 3. Copy the contents of `app/config/local` into the created folder.
-
-4. Create a file `.env.environmentName.php` in the platypus root 
+4. Edit files in  `app/config/environmentName` as desired.
+5. Create a file `.env.environmentName.php` in the platypus root 
 	(`/path/to/platypus`) directory as shown below and 
 	put the correct database password inside.
 
