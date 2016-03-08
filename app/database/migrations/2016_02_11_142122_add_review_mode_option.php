@@ -15,7 +15,7 @@ class AddReviewModeOption extends Migration {
 		Schema::table('assignments', function(Blueprint $table)
 		{
 			//
-			$table->tinyInteger('review_mode')->default(ReviewLimitMode::minreviewlimit);
+			$table->tinyInteger('review_mode')->default(1);
 			$table->integer('min_assigned_reviews')->unsigned()->default(0);
 		});
 	}
