@@ -52,7 +52,8 @@ class AssignmentEditorController extends BaseController {
 						// 'marking_started',
 						//'autostart_marking_time',
 						'late_policy',
-						'marks_released'
+						'marks_released',
+						'mark_limit'
 				);
 				
 			} else {
@@ -77,7 +78,8 @@ class AssignmentEditorController extends BaseController {
 						// 'marking_started',
 						'autostart_marking_time',
 						'late_policy',
-						'marks_released' 
+						'marks_released',
+						'mark_limit'
 				);
 			}
 			$input = Input::only($onlyValues);

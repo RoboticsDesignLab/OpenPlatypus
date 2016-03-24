@@ -189,7 +189,7 @@ function validateOrAbortSimple($value, $rules) {
 	}
 }
 
-function validateMark(&$mark, $allowEmpty = true, $allowDecimals = false) {
+function validateMark(&$mark, $allowEmpty = true, $allowDecimals = false, $mark_limit=100) {
 	if ($mark == "") {
 		if ($allowEmpty) {
 			$mark = null;
@@ -208,7 +208,7 @@ function validateMark(&$mark, $allowEmpty = true, $allowDecimals = false) {
 	}
 
 	if ($mark < 0) return false;
-	if ($mark > 100) return false;
+	if ($mark > $mark_limit) return false;
 
 	return true;
 }

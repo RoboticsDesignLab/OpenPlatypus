@@ -502,9 +502,10 @@ class ReviewController extends BaseController {
 			if (!$review->mayEditTextAndMark(Auth::user())) App::abort(403);
 							
 			$mark = Input::get("mark");
-				
-			$ok = self::validateMark($mark, true, !$review->assignment->isStudent(Auth::user()));
-			
+
+
+			$ok = validateMark($mark, true, !$review->assignment->isStudent(Auth::user()), $review->assignment->mark_limit);
+
 			if ($ok) {
 				$review->mark = $mark;
 	
@@ -762,7 +763,7 @@ class ReviewController extends BaseController {
 		if($success && $setFinalMark) {
 			if (!$assignment->maySetFinalMarks(Auth::user())) App::abort(403);
 			$permissionsChecked = true;
-			if (self::validateMark($finalMark, false, true)) {
+			if (validateMark($finalMark, false, true, $assignment->mark_limit)) {
 				$answer->setFinalMark($finalMark, $deletedReviewIds);
 			} else {
 				$success = false;
@@ -885,7 +886,7 @@ class ReviewController extends BaseController {
 		$assignment = $answer->assignment;
 		
 		$allowDecimals = ! (isset($review) && $review->isStudentReview());
-		if (!self::validateMark($mark, true, $allowDecimals)) {
+		if (!validateMark($mark, true, $allowDecimals, $assignment->mark_limit)) {
 			$mark = null;
 		}
 		
@@ -1089,7 +1090,7 @@ class ReviewController extends BaseController {
 			$json ['script'] = '';
 			
 			$mark = Input::get('mark','');
-			if (self::validateMark($mark, false, true)) {
+			if (validateMark($mark, false, true, $assignment->mark_limit)) {
 				$deletedReviewIds = array();
 				$answer->setFinalMark($mark, $deletedReviewIds);
 				$success = true;

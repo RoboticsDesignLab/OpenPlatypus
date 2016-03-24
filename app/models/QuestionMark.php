@@ -50,13 +50,15 @@ class QuestionMark extends PlatypusBaseModel {
 	// set the validation rules that apply to this model.
 	// the rules are set below. This is a workaround for a stupid php limitation.
 	public static $rules = array (
-		'mark' => 'numeric|min:0|max:100'
+		'mark' => 'numeric|min:0|max:9999'
 	);
+
+	protected function prepareForValidation() {
+		$rules['mark'] = sprintf('numeric|min:0|max:%u', $this->assignment->mark_limit);
+	}
 	
 	// point out that this model uses a presenter to tweak fields whe n showing them in views.
 	public static $presenterClass='QuestionMarkPresenter';
-	
-		
 
 	// create the initial database tables
 	static function createTable() {

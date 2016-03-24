@@ -66,6 +66,10 @@ if($assignment->markingHasStarted()) {
 	array('placeholder' => 'DD/MM/YYYY HH:MM:SS'),
 	'The date (and time) the tutors have to have completed their marking by. This date is informative only and not enforced.') }}
 
+{{ Form::input_group('text', 'mark_limit', 'Mark Limit', $assignment->mark_limit,
+	$errors, $disabledIfMarking(),
+	'Maximum value a question can receive as a percentage of full marks.') }}
+
 {{ Form::radio_group_vertical('marks_released', 'marks_released', Assignment::explainMarksReleased(),
 	$assignment->marks_released, $errors) }}
 			</div>

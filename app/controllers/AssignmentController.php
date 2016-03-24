@@ -306,7 +306,7 @@ class AssignmentController extends BaseController {
 						$model->delete();
 					}
 				} else {
-					if (validateMark($mark, false, true)) {
+					if (validateMark($mark, false, true, $assignment->mark_limit)) {
 						$assignment->setUserAssignmentMarkSave($user, $mark);
 					} else {
 						$json ['alert'] = 'Please enter a valid mark as percentage between 0 and 100.';
@@ -358,7 +358,7 @@ class AssignmentController extends BaseController {
 						$model->delete();
 					}
 				} else {
-					if (validateMark($mark, false, true)) {
+					if (validateMark($mark, false, true, $assignment->mark_limit)) {
 						$question->setUserMarkSave($user, $mark);
 					} else {
 						$json ['alert'] = 'Please enter a valid mark as percentage between 0 and 100.';

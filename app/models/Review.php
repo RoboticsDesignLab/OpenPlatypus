@@ -106,9 +106,13 @@ class Review extends PlatypusBaseModel {
 	// set the validation rules that apply to this model.
 	// the rules are set below. This is a workaround for a stupid php limitation.
 	public static $rules = array (
-		'mark' => 'numeric|min:0|max:100',
+		'mark' => 'numeric|min:0|max:9999',
 		'review_rating' => 'numeric|min:-1000|max:100',
 	);
+
+	protected function prepareForValidation() {
+		$rules['mark'] = sprintf('numeric|min:0|max:%u', $this->assignment->mark_limit);
+	}
 	
 	// receives a copy of the current rules for self-validation
 	// has to return the new rules.

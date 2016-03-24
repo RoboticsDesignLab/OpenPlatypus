@@ -112,6 +112,7 @@ class Assignment extends PlatypusBaseModel {
 		'autostart_marking_time',
 		'late_policy',
 		'marks_released',
+		'mark_limit'
 	);
 	
 	// fields we set with default values
@@ -129,6 +130,7 @@ class Assignment extends PlatypusBaseModel {
 		'autostart_marking_time' => NULL,
 		'late_policy' => AssignmentLatePolicy::donotaccept,
 		'marks_released' => AssignmentMarksReleased::none,
+		'mark_limit' => 100,
 	);
 	
 	// fields we want converted to Carbon timestamps on the fly.
@@ -345,7 +347,7 @@ class Assignment extends PlatypusBaseModel {
 				if ($group->hasMultipleSubmittedAnswersForAQuestion()) {
 					$success = false;
 					$this->validationErrors->add('group_work_mode',
-						'Students have already submitted multiple andwers for a question within a student group.');
+						'Students have already submitted multiple answers for a question within a student group.');
 					break;
 				}
 			}
@@ -1477,7 +1479,7 @@ class Assignment extends PlatypusBaseModel {
 			$table->timestamp('autostart_marking_time')->nullable()->index()->default(NULL);
 			$table->tinyInteger('late_policy')->default(AssignmentLatePolicy::donotaccept);
 			$table->tinyInteger('marks_released')->default(AssignmentMarksReleased::none);
-			
+			$table->smallInteger('mark_limit')->default(100);
 			$table->index(array (
 					'marking_started',
 					'autostart_marking_time'
@@ -1508,6 +1510,7 @@ Assignment::$rules = array (
 	'autostart_marking_time' => 'date|carbon|afterequalfield:answers_due|beforefield:peers_due|beforefield:tutors_due|beforefield:peers_due',
 	// late_policy is enum
 	// marks_released is enum
+	'mark_limit' => 'required|between:0,9999'
 );
 
 // Add code to attach a text block if the assignment is new.
