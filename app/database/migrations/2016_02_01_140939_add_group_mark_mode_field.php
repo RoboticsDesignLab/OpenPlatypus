@@ -3,6 +3,8 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+use Platypus\Model\Assignment;
+
 class AddGroupMarkModeField extends Migration {
 
 	/**
@@ -15,7 +17,7 @@ class AddGroupMarkModeField extends Migration {
 		Schema::table('assignments', function(Blueprint $table)
 		{
 			//
-			$table->tinyInteger('group_mark_mode')->default(AssignmentGroupMarkMode::group);
+			$table->tinyInteger('group_mark_mode')->default(0);
 		});
 	}
 
