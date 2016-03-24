@@ -1219,11 +1219,10 @@ class Assignment extends PlatypusBaseModel {
 					
 				} else {
 					// join the reviews table anyway for sorting.
-					$result->leftJoin('reviews', function($q) use($user) {
+					$result->leftJoin('reviews', function($q) use($users) {
 						$q->on('answers.id','=','reviews.answer_id')
-							->whereIn('reviews.user_id', '=', $users);
-						});
-						
+						->on('reviews.user_id', 'in', DB::raw('('.implode(',', $users).')'));
+					});
 				}
 					
 			}
@@ -1306,9 +1305,9 @@ class Assignment extends PlatypusBaseModel {
 					
 				} else {
 					// join the reviews table anyway for sorting.
-					$result->leftJoin('reviews', function($q) use($user) {
+					$result->leftJoin('reviews', function($q) use($users) {
 						$q->on('answers.id','=','reviews.answer_id')
-							->whereIn('reviews.user_id', '=', $users);
+							->on('reviews.user_id', 'in', DB::raw('('.implode(',', $users).')'));
 						});
 				}
 			}			
