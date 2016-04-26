@@ -1,3 +1,3 @@
 <?php 
- $ckeditorVersionSetter('ckeditor_4.4.7_598bded633c5-2015-04-25');
+ $ckeditorVersionSetter('ckeditor_4.5.8_268a899a0549-2016-04-26');
 ?>
