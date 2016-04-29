@@ -37,4 +37,10 @@ MathJax.Hub.Register.StartupHook("TeX Jax Ready",function () {
   
 });
 
+MathJax.Hub.Config({
+  menuSettings: {
+    zoom: "Hover"
+  }
+});
+
 MathJax.Ajax.loadComplete("[MathJax]/config/local/local.js");
