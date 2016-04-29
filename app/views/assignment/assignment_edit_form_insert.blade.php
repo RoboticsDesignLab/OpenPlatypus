@@ -33,7 +33,7 @@
 				<a class="collapse-toggle" data-toggle="collapse" href="#marking_settings">Marking Settings</a>
 			</h4>
 		</div>
-		<div id="marking_settings" class="panel-collapse collapse">
+		<div id="marking_settings" class="panel-collapse collapse in">
 			<div class="panel-body">
 {{ Form::input_group('text', 'autostart_marking_time', 'Autostart marking', $assignment->autostart_marking_time,
 	$errors, $disabledIfMarking(array('placeholder' => 'DD/MM/YYYY HH:MM:SS')),
@@ -84,7 +84,7 @@ if($assignment->markingHasStarted()) {
 				<a class="collapse-toggle" data-toggle="collapse" href="#review_settings">Peer Review Settings</a>
 			</h4>
 		</div>
-		<div id="review_settings" class="panel-collapse collapse">
+		<div id="review_settings" class="panel-collapse collapse in">
 			<div class="panel-body">
 {{ Form::radio_group_vertical('review_mode', 'review_mode', Assignment::explainReviewMode(),
 	$assignment->review_mode, $errors, $disabledIfMarking()) }}
@@ -115,7 +115,7 @@ if($assignment->markingHasStarted()) {
 				<a class="collapse-toggle" data-toggle="collapse" href="#group_settings">Group Settings</a>
 			</h4>
 		</div>
-		<div id="group_settings" class="panel-collapse collapse">
+		<div id="group_settings" class="panel-collapse collapse in">
 			<div class="panel-body">
 {{ Form::radio_group_vertical('group_work_mode', 'group_work_mode', Assignment::explainGroupWorkMode(),
 	$assignment->group_work_mode, $errors, $disabledIfMarking()) }}
