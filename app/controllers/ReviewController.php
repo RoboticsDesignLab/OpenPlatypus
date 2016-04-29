@@ -520,9 +520,9 @@ class ReviewController extends BaseController {
 				$json = array ();
 				$json ['success'] = false;
 				if ($review->assignment->isStudent(Auth::user())) {
-					$json ['alert'] = 'Please enter an integer value between 0 and 100.';
+					$json ['alert'] = 'Please enter an integer value between 0 and ' . $review->assignment->mark_limit . '.';
 				} else {
-					$json ['alert'] = 'Please enter a value between 0 and 100.';
+					$json ['alert'] = 'Please enter a value between 0 and ' . $review->assignment->mark_limit  . '.';
 				}
 				return Response::json($json);
 			}

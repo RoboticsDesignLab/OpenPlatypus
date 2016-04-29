@@ -396,7 +396,7 @@ class AssignmentEditorController extends BaseController {
 			
 			$mark_percentage = Input::get("mark_percentage", Question::autoMarkPercentage);
 			
-			if (is_numeric($mark_percentage) && (($mark_percentage == Question::autoMarkPercentage) || (($mark_percentage >= 0) && ($mark_percentage <= 100)))) {
+			if (is_numeric($mark_percentage) && (($mark_percentage == Question::autoMarkPercentage) || (($mark_percentage >= 0) && ($mark_percentage <= $assignment->mark_limit)))) {
 				$question->mark_percentage = $mark_percentage;
 				
 				$question->save();
@@ -413,7 +413,7 @@ class AssignmentEditorController extends BaseController {
 			} else {
 				$json = array ();
 				$json ['success'] = false;
-				$json ['alert'] = 'Please enter a value between 0 and 100.';
+				$json ['alert'] = 'Please enter a value between 0 and ' . $assignment->mark_limit . '.';
 				return Response::json($json);
 			}
 		});
