@@ -94,7 +94,6 @@ class DiskFile extends PlatypusBaseModel {
    	// returns false on failure.
    	public function moveFile($filename) {
    		$fullDiskFileName = $this->fullDiskFileName();
-   		
    		if (file_exists($fullDiskFileName)) {
    			
    			// get the real file name in case there is a symlink.
@@ -122,7 +121,7 @@ class DiskFile extends PlatypusBaseModel {
    			
    			// make sure the directory exists
    			$path = (new SplFileInfo($fullDiskFileName))->getPath();
-   			if (! (new SplFileInfo($fullDiskFileName))->isDir()) {
+			if (! (new SplFileInfo($path))->isDir()) {
    				$umask = umask(0000);
    				$success = @mkdir($path, static::$directoryPermissions, true);
    				umask($umask);
@@ -133,6 +132,10 @@ class DiskFile extends PlatypusBaseModel {
    			
    			// Move the given file in its place.
    			if (!move_uploaded_file($filename, $fullDiskFileName)) {
+				$e = error_get_last();
+				if ($e['message'] != '') {
+					Log::warning($e['message']);
+				}
    				return false;
    			}
    			
