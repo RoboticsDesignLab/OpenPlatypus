@@ -21,7 +21,8 @@ $urlGenerator = function($user) use ($assignment) {
 <div class="row">
 	<div class="col-md-12 text-right">
 		{{ Form::open_inline(array('route' => array('assignmentJumpToReview', $assignment->id))) }}
-		
+
+		<strong>Student ID</strong> <input type="text" name="student" class="form-control">
 		<strong>Review #</strong> <input type="text" name="review" class="form-control">
 		
 		<input type="submit" class="btn btn-primary" value="Search">

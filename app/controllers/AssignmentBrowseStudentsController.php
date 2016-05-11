@@ -43,35 +43,49 @@ class AssignmentBrowseStudentsController extends BaseController {
 			if (! $assignment->mayBrowseStudents(Auth::user())) {
 				App::abort(403);
 			}
-			
-			$found = false;
-			
-			do {
-				if (! Input::has('review'))	break;
-				
-				$review_id = Input::get('review');
-				
-				if (! is_numeric($review_id)) break;
-				
-				$review = Review::find($review_id);
-				
-				if (! isset($review)) break;
-				
-				$found = true;
-				
-			} while ( false );
-			
-			
-			if ($found) {
-				return Redirect::to(URL::route('assignmentBrowseStudentShow', array('assignment_id' => $assignment->id, 'user_id' => $review->answer->user_id)).'#target_review_'.$review->id);
-			} else {
-				return Redirect::route('assignmentBrowseStudentList', $assignment->id)->withDanger('The review number you entered could not be found.');
+
+			$student = null;
+			$review = null;
+			if (Input::has('review')) {
+				$review = $this->getReviewFromInput(Input::get('review'));
 			}
+
+			if (Input::has('student')) {
+				$student = $this->getStudentFromInput($assignment->subject, Input::get('student'));
+			}
+
+			if ($student == null && $review != null) {
+				$student = $review->answer->user;
+			} elseif (($student != null && $review != null) && ($student->id != $review->answer->user_id)) {
+				return Redirect::route('assignmentBrowseStudentList', $assignment->id)->withDanger('The Student ID supplied was not issued this review.');
+			} elseif ($student == null && $review == null){
+				return Redirect::route('assignmentBrowseStudentList', $assignment->id)->withDanger('The IDs entered could not be found.');
+			}
+
+			return Redirect::to(URL::route('assignmentBrowseStudentShow', array('assignment_id' => $assignment->id, 'user_id' => $student->id)) . (($review !=null) ? '#target_review_'.$review->id : ''));
 			
 		});
 		
 	}
-	
+
+	private function getReviewFromInput($input) {
+		if (! is_numeric($input)) return null;
+
+		$review = Review::find($input);
+
+		if (! isset($review)) return null;
+
+		return $review;
+	}
+
+	private function getStudentFromInput($subject, $input) {
+		$student = User::findByEmailOrIdInSubject($subject, $input);
+
+		if (! isset($student)) return null;
+
+		return $student;
+	}
+
 	public function showAllStudentsMonster($assignment_id) {
 		return Platypus::transaction(function () use($assignment_id) {
 				
