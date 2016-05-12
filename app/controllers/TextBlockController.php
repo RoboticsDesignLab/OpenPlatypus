@@ -16,11 +16,14 @@ class ConsiderAutosaveMode extends PlatypusEnum {
 
 class TextBlockController extends BaseController {
 
-	public function showTextAjax($textblock_id, $role, $showEditLink = true) {
+	public function showTextAjax($textblock_id, $role, $showEditLink = true, $showCopyLink = false) {
 		if ($showEditLink == '0') $showEditLink=false;
 		if ($showEditLink == '1') $showEditLink=true;
+
+		if ($showCopyLink == '0') $showCopyLink=false;
+		if ($showCopyLink == '1') $showCopyLink=true;
 		
-		return Platypus::transaction(function () use($textblock_id, $role, $showEditLink) {
+		return Platypus::transaction(function () use($textblock_id, $role, $showEditLink, $showCopyLink) {
 			
 			if (! TextBlockRole::isValid($role)) {
 				App::abort(404);
@@ -45,6 +48,7 @@ class TextBlockController extends BaseController {
 					'textBlock' => $textBlock,
 					'role' => $role,
 					'showEditLink' => $showEditLink,
+					'showCopyLink' => $showCopyLink,
 					'lazyMode' => TextBlockLazyLoadMode::show,
 			))->render();
 			

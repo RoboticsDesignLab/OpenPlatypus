@@ -41,7 +41,7 @@ Edit assignment
     </div>
     <div id="editIntroduction" class="panel-collapse collapse in">
       <div class="panel-body">
-		@include('...textblock.textblock_show_insert', array('textBlock' => $assignment->introduction, 'showEditLink' => $assignment->mayEditIntroduction(Auth::user()), 'role' => TextBlockRole::assignmentintroduction))
+		@include('...textblock.textblock_show_insert', array('textBlock' => $assignment->introduction, 'showEditLink' => $assignment->mayEditIntroduction(Auth::user()), 'showCopyLink' => $assignment->mayCopyIntroduction(Auth::user()), 'role' => TextBlockRole::assignmentintroduction))
 	  </div>
     </div>
 </div>
@@ -51,7 +51,7 @@ Edit assignment
 <div class="ajaxFormWrapper">
 
 @foreach ($questions as $question)
-	@include('...question.edit_insert', array('question' => $question, 'showEditLink' => true, 'assignment' => $assignment))
+	@include('...question.edit_insert', array('question' => $question, 'showEditLink' => true, 'showCopyLink' => false, 'assignment' => $assignment))
 @endforeach
 
 @if($assignment->mayAddQuestions(Auth::user()))

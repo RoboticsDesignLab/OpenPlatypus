@@ -171,6 +171,7 @@ body.loading .ajaxFormWrapper a, body.loading .ajaxFormWrapper form {
 	{{-- <script src="http://cdn.mathjax.org/mathjax/2.2-latest/MathJax.js?config=TeX-AMS_HTML" id="mathjaxScriptTag"></script> --}}
 	<script src="{{{ asset('packages/mathjax/MathJax.js?config=TeX-AMS_HTML,local/local&cachetag='.$cacheTag) }}}" id="mathjaxScriptTag"></script>{{-- we need to tag this one because the src needs to be passed to ckeditor later on. --}}
 	<script src="{{{ asset("packages/$ckeditorVersion/plugins/codesnippet/lib/highlight/highlight.pack.js") }}}"></script>
+	<script src="{{{ asset('packages/clipboard.js/dist/clipboard.min.js') }}}"></script>
 	<script src="{{{ asset("js/platypus.js?cachetag=$cacheTag") }}}"></script>
 	
 	

@@ -104,17 +104,17 @@
 	  		<!-- Tab panes -->
   			<div class="tab-content">
     			<div role="tabpanel" class="tab-pane fade in active" id="question_{{{ $question->id }}}_question">
-    				@include('textblock.textblock_show_insert', array('textBlock' => $question->text, 'showEditLink' => $assignment->mayEditQuestions(Auth::user()), 'role' => TextBlockRole::question))
+    				@include('textblock.textblock_show_insert', array('textBlock' => $question->text, 'showEditLink' => $assignment->mayEditQuestions(Auth::user()), 'showCopyLink' => $assignment->mayCopyQuestions(Auth::user()), 'role' => TextBlockRole::question))
 	    		</div>
     			@if(!$question->isMaster())
 	    		{{--<div role="tabpanel" class="tab-pane fade" id="question_{{{ $question->id }}}_restrictions">
     				<strong>Not implemented yet.</strong>
     			</div>--}}
     			<div role="tabpanel" class="tab-pane fade" id="question_{{{ $question->id }}}_solution">
-    				@include('textblock.textblock_show_insert', array('textBlock' => $question->solution, 'showEditLink' => $question->mayEditSolution(Auth::user()), 'role' => TextBlockRole::questionsolution))
+    				@include('textblock.textblock_show_insert', array('textBlock' => $question->solution, 'showEditLink' => $question->mayEditSolution(Auth::user()), 'showCopyLink' => false, 'role' => TextBlockRole::questionsolution))
     			</div>
     			<div role="tabpanel" class="tab-pane fade" id="question_{{{ $question->id }}}_marking_scheme">
-    				@include('textblock.textblock_show_insert', array('textBlock' => $question->marking_scheme, 'showEditLink' => $assignment->mayEditMarkingSchemes(Auth::user()), 'role' => TextBlockRole::markingscheme))
+    				@include('textblock.textblock_show_insert', array('textBlock' => $question->marking_scheme, 'showEditLink' => $assignment->mayEditMarkingSchemes(Auth::user()), 'showCopyLink' => false, 'role' => TextBlockRole::markingscheme))
     			</div>
 	    		@endif
     		</div>

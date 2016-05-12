@@ -8,9 +8,14 @@ if(!isset($renderForArchive)) {
 	$renderForArchive  =false;
 }
 
+if(!isset($showCopyLink)) {
+	$showCopyLink = false;
+}
+
 if($renderForArchive) {
 	$lazyMode = TextBlockLazyLoadMode::show;
 	$showEditLink = false;
+	$showCopyLink = false;
 }
 
 ?>
@@ -24,7 +29,7 @@ if($renderForArchive) {
 	@if($renderForArchive)
 		@include('textblock.textblock_showText_archive_insert', array('textBlock' => $textBlock, 'role' => $role))
 	@else
-		@include('textblock.textblock_showText_insert', array('textBlock' => $textBlock, 'showEditLink' => $showEditLink, 'role' => $role, 'lazyMode' => $lazyMode))
+		@include('textblock.textblock_showText_insert', array('textBlock' => $textBlock, 'showEditLink' => $showEditLink, 'showCopyLink' => $showCopyLink,  'role' => $role, 'lazyMode' => $lazyMode))
 	@endif
 </div>
 

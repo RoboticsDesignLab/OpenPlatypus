@@ -1135,3 +1135,15 @@ jQuery(document).ready(function($) {
 	}
 	
 });
+
+new Clipboard('.btn-copy', {
+	text: function(trigger) {
+		e_name = trigger.getAttribute("data-copy-target");
+		console.log(e_name);
+		if (e_name == null) {
+			console.log(trigger);
+			return
+		}
+		return document.getElementById(e_name).innerHTML;
+	}
+});

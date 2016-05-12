@@ -606,11 +606,19 @@ class Assignment extends PlatypusBaseModel {
 	
 	public function mayEditIntroduction(User $user) {
 		return $this->mayEditQuestions($user);
-	}	
-	
+	}
+
+	public function mayCopyIntroduction(User $user) {
+		return $this->mayCopyQuestions($user);
+	}
+
 	public function mayEditQuestions(User $user) {
 		if ($this->markingHasStarted()) return false;
 		return $this->mayManageAssignment($user);
+	}
+
+	public function mayCopyQuestions(User $user) {
+		return $this->markingHasStarted() && $this->mayManageAssignment($user);
 	}
 	
 	public function mayAddQuestions(User $user) {
