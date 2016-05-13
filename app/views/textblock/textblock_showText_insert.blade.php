@@ -11,6 +11,10 @@ if($lazyMode == TextBlockLazyLoadMode::smart) {
 	}
 }
 
+if(!isset($showCopyLink)){
+	$showCopyLink = false;
+}
+
 ?>
 
 @if(empty($textBlock->text))
