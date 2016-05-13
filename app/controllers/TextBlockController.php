@@ -16,14 +16,13 @@ class ConsiderAutosaveMode extends PlatypusEnum {
 
 class TextBlockController extends BaseController {
 
-	public function getTextAjax($textblock_id) {
-		return Platypus::transaction(function () use($textblock_id) {
+	public function getTextAjax($textblock_id, $role) {
+		return Platypus::transaction(function () use($textblock_id, $role) {
 
 			$textBlock = TextBlock::findOrFail($textblock_id);
-
-//			if (! $textBlock->mayView(Auth::user(), $role)) {
-//				App::abort(403);
-//			}
+			if (! $textBlock->mayView(Auth::user(), $role)) {
+				App::abort(403);
+			}
 
 			$json = array ();
 			$json ['success'] = true;
