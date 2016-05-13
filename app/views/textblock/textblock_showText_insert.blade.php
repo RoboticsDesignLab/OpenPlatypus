@@ -66,7 +66,7 @@ if(!isset($showCopyLink)){
 	@if($showCopyLink && !empty(trim($textBlock->resource->text)))
 
 	<p>
-		<button class="btn btn-default btn-copy" data-copy-target="{{$text_element_id}}"><span class="glyphicon glyphicon-copy"></span> Copy Source</button>
+		<button class="btn btn-default btn-copy ajaxCopyLoader" data-copy-target="{{$text_element_id}}" data-url="{{{ route('getTextBlockTextAjax', array("textblock_id" => $textBlock->id) ) }}}"><span class="glyphicon glyphicon-copy"></span> Copy Source</button>
 	</p>
 
 	@endif

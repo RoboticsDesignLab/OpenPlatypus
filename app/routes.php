@@ -181,6 +181,7 @@ Route::group(array('before' => 'modernbrowser|databaseok'), function() {
 		
 		
 		// TextBlockController
+		Route::get('textblock/ajax/{textblock_id}/getText', array('as' => 'getTextBlockTextAjax', 'before' => 'numeric:textblock_id', 'uses' => 'TextBlockController@getTextAjax' ) );
 		Route::get('textblock/ajax/{textblock_id}/{role}/showText', array('as' => 'showTextBlockTextAjax', 'before' => 'numeric:textblock_id|numeric:role', 'uses' => 'TextBlockController@showTextAjax' ) );
 		Route::get('textblock/ajax/{textblock_id}/{role}/showText/{showeditlink}', array('as' => 'showTextBlockTextAjax2', 'before' => 'numeric:textblock_id|numeric:role|numeric:showeditlink', 'uses' => 'TextBlockController@showTextAjax' ) );
 		Route::get('textblock/ajax/{textblock_id}/{role}/editText', array('as' => 'editTextBlockTextAjax', 'before' => 'numeric:textblock_id|numeric:role', 'uses' => 'TextBlockController@editTextAjax' ) );

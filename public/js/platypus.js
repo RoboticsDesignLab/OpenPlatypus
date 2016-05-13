@@ -106,6 +106,10 @@ function registerEventHandlers(object) {
 		setTimeout( function() { runAjaxContentLoader(element); }, 0 );
 	});
 
+	$(object).findAll(".ajaxCopyLoader").each( function(index, element) {
+		setTimeout( function() { runAjaxCopyLoader(element); }, 0 );
+	});
+
 	$(object).findAll("form[data-confirmationdialog]").on("submit", function(event) {
 		handleConfirmationDialog(event, $(this));
 	});
@@ -650,7 +654,6 @@ function processJsonResponse(ajaxJsonContent, container, isAutoUpdateEvent) {
 	
 }
 
-
 function runAjaxContentLoader(object) {
 	if (! $(object).hasClass("ajaxContentLoader") ) {
 		return;
@@ -702,7 +705,6 @@ function runAjaxContentLoader(object) {
 	});
 	
 }
-
 
 function scheduleAutosaveText(event, object) {
 	object.removeClass('dataCollectedForAutosave');
@@ -1136,14 +1138,74 @@ jQuery(document).ready(function($) {
 	
 });
 
+var clipboard_map = {};
+
+function addClipboardValue(id, value) {
+	clipboard_map[id] = value;
+}
+
+function runAjaxCopyLoader(object) {
+	if (! $(object).hasClass("ajaxCopyLoader") ) {
+		return;
+	}
+
+	var ajaxUrl = $(object).attr("data-url");
+	var ajaxMethod = 'get';
+
+	var ajaxSuccess = false;
+	var ajaxJsonContent;
+
+	var contentClipboardId = $(object).attr("data-copy-target");
+
+	$.ajax(ajaxUrl, {
+		type: ajaxMethod,
+		error: function(jqXHR, textStatus, errorThrown) {
+			setTimeout(function() { alert("warning: Unable to load content to copy buffer." + "Debug info: " + jqXHR.responseText);},0);
+		},
+		success: function(data, textStatus, jqXHR) { ajaxJsonContent = data; ajaxSuccess = true; },
+		complete: function() {
+
+			if (ajaxSuccess) {
+
+				if( (!ajaxJsonContent.hasOwnProperty("success")) || (ajaxJsonContent.success)) {
+					$(object).removeClass("alert alert-warning");
+				} else {
+					$(object).addClass("alert alert-warning");
+				}
+
+				if(ajaxJsonContent.hasOwnProperty("text")) {
+					addClipboardValue(contentClipboardId, ajaxJsonContent.text);
+				}
+
+			} else {
+				$(object).addClass("alert alert-warning");
+			}
+		}
+	});
+
+}
+
 new Clipboard('.btn-copy', {
 	text: function(trigger) {
-		e_name = trigger.getAttribute("data-copy-target");
-		console.log(e_name);
+		// e_name = trigger.getAttribute("data-copy-target");
+		// console.log(e_name);
+		// if (e_name == null) {
+		// 	console.log(trigger);
+		// 	return
+		// }
+		// return document.getElementById(e_name).innerHTML;
+
+		var e_name = trigger.getAttribute("data-copy-target");
 		if (e_name == null) {
 			console.log(trigger);
 			return
 		}
-		return document.getElementById(e_name).innerHTML;
+
+		var result = clipboard_map[e_name];
+		if (result == null) {
+			console.log(trigger);
+			return
+		}
+		return result;
 	}
 });
