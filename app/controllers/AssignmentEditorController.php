@@ -53,7 +53,7 @@ class AssignmentEditorController extends BaseController {
 						//'autostart_marking_time',
 						'late_policy',
 						'marks_released',
-						'mark_limit'
+						//'mark_limit'
 				);
 				
 			} else {
