@@ -29,7 +29,8 @@
 <link href="{{{ asset('themes/xl-columns.css') }}}"	rel="stylesheet">
 
 {{-- Custom styles for this template --}}
-<link href="{{{ asset("themes/default.css?cachetag=$cacheTag") }}}" rel="stylesheet">
+<link href="{{{ asset("themes/default.css?cachetag=$cacheTag") }}}" rel="stylesheet" type="text/css">
+<link href="{{{ asset("themes/print.css?cachetag=$cacheTag") }}}" rel="stylesheet" type="text/css" media="print">
 
 
 
