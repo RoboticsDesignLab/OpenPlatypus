@@ -124,7 +124,6 @@ class Assignment extends PlatypusBaseModel {
 		'number_of_peers' => 3,
 		'min_assigned_reviews' => 0,
 		'shuffle_mode' => AssignmentShuffleMode::shufflequestions,
-		'shuffle_min' => ReviewLimitMode::minreviewlimit,
 		'marking_started' => PlatypusBool::false,
 		'offline' => PlatypusBool::false,
 		'autostart_marking_time' => NULL,
