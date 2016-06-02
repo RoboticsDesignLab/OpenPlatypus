@@ -309,7 +309,7 @@ class AssignmentController extends BaseController {
 					if (validateMark($mark, false, true, $assignment->mark_limit)) {
 						$assignment->setUserAssignmentMarkSave($user, $mark);
 					} else {
-						$json ['alert'] = 'Please enter a valid mark as percentage between 0 and 100.';
+						$json ['alert'] = 'Please enter a valid mark as percentage between 0 and ' . $assignment->mark_limit . '.';
 					}
 				}
 			}
@@ -361,7 +361,7 @@ class AssignmentController extends BaseController {
 					if (validateMark($mark, false, true, $assignment->mark_limit)) {
 						$question->setUserMarkSave($user, $mark);
 					} else {
-						$json ['alert'] = 'Please enter a valid mark as percentage between 0 and 100.';
+						$json ['alert'] = 'Please enter a valid mark as percentage between 0 and ' . $assignment->mark_limit . '.';
 					}
 				}
 			}
@@ -729,10 +729,14 @@ class AssignmentController extends BaseController {
 				if(substr($key, 0, strlen('set_mark_for_answer_')) == 'set_mark_for_answer_') {
 					$answer_id = substr($key, strlen('set_mark_for_answer_'));
 					if(!is_numeric($answer_id)) {
-						App::abort(404);
+						$result = Redirect::route('autoMarkAssignment', $assignment->id);
+						$result->withDanger('Some marks are unable to pass validation. All marks must be numerical values.');
+						return $result;
 					}
-					if(!validateSimple($value, 'required|numeric|min:0|max:100')) {
-						App::abort(404);
+					if(!validateMark($value, false, true, $assignment->mark_limit)) {
+						$result = Redirect::route('autoMarkAssignment', $assignment->id);
+						$result->withDanger('Some marks are unable to pass validation. Values must be between 0 and '. $assignment->mark_limit .'.');
+						return $result;
 					}
 					$marksToSet[] = array('answer' => $answer_id, 'mark' => $value);
 				}
